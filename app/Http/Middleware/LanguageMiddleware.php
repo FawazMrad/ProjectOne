@@ -16,11 +16,15 @@ class LanguageMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Get the language header from the request
-        $lang = $request->header('lang');
-
-        // Set the language based on the header value
-        App::setLocale($lang);
+        try {
+            $prefferedLang = $request->header('lang');
+            if ($prefferedLang)
+                App::setLocale($prefferedLang);
+        }
+        catch(Exception)
+        {
+            return \response()->json(['message'=>'please enter valid language character'],400);
+        }
         return $next($request);
     }
 }

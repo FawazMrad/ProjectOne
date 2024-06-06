@@ -18,19 +18,19 @@ class Friendship extends Model
     ];
     public function sender()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class,'sender_id');
     }
-    public function reciver()
+    public function receiver()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class,'receiver_id');
     }
     public function sentFriendRequests()
     {
-        return $this->hasMany(Friendship::class, 'requester_id');
+        return $this->hasMany(Friendship::class,'sender_id');
     }
 
     public function receivedFriendRequests()
     {
-        return $this->hasMany(Friendship::class, 'requested_id');
+        return $this->hasMany(Friendship::class,'receiver_id');
     }
 }

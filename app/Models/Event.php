@@ -8,7 +8,23 @@ use Illuminate\Database\Eloquent\Model;
 class Event extends Model
 {
     use HasFactory;
-
+    protected $fillable=[
+        'user_id',
+        'category_id',
+        'title',
+        'description_ar',
+        'description_en',
+        'start_date',
+        'end_date',
+        'min_age',
+        'is_paid',
+        'is_private',
+        'attendance_type',
+        'total_cost',
+        'ticket_price',
+        'image',
+        'qr_code'
+    ];
 
     public function user()
     {

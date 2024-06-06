@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use Stichoza\GoogleTranslate\GoogleTranslate;
+use App\Http\Controllers\EventController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -16,3 +17,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/translate',function (){
+    //$lang=new GoogleTranslate('en');
+    //return $lang->setSource('en')->setTarget('ar')->translate("hellow world.");
+return app()->getLocale();
+});
+

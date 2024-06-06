@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('venue_reservations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('venue_id')->constrained('venues');
-            $table->foreignId('event_id')->constrained('events');
+            $table->foreignId('venue_id')->references('id')->on('venues');
+            $table->foreignId('event_id')->references('id')->on('events');
             $table->date('start_date');
             $table->date('end_date');
             $table->integer('booked_seats')->nullable();
