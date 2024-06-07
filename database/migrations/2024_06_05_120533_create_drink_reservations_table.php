@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('drink_id')->references('id')->on('drinks');
             $table->foreignId('event_id')->references('id')->on('events');
-            $table->integer('number_of_drinks');
+            $table->integer('quantity');
             $table->integer('total_price');
             $table->date('serving_date');
             $table->timestamps();

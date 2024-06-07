@@ -13,7 +13,7 @@ class SecurityReservation extends Model
         'event_id',
         'start_date',
         'end_date',
-        'guards_number',
+        'quantity',
         'cost'
     ];
        public function security(){

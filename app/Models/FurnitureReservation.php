@@ -11,7 +11,7 @@ class FurnitureReservation extends Model
     protected $fillable=[
       'event_id',
       'furniture_id',
-      'number',
+      'quantity',
       'start_date',
       'end_date',
       'cost'

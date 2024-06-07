@@ -9,15 +9,17 @@ class DecorationItemReservation extends Model
 {
     use HasFactory;
     protected  $fillable=[
-      'venue_reservation_id',
+      'event_id',
         'decoration_item_id',
+        'start_date',
+        'end_date',
         'quantity',
         'cost'
     ];
     public function decorationItem(){
         return $this->belongsTo(DecorationItem::class);
     }
-    public function venueReservationID(){
-        return $this->belongsTo(VenueReservation::class);
+    public function event(){
+        return $this->belongsTo(Event::class);
     }
 }
