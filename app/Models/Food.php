@@ -13,7 +13,7 @@ class Food extends Model
       'type',
       'description_en',
       'description_ar',
-      'individual_cost',
+      'cost',
       'image'
     ];
     public function foodReservations(){

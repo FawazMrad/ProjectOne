@@ -22,7 +22,5 @@ class VenueReservation extends Model
    public function event(){
        return $this->belongsTo(Event::class);
    }
-   public function decorationItemReservations(){
-       return $this->hasMany(DecorationItemReservation::class);
-   }
+
 }

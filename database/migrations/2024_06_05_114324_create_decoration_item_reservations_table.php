@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('decoration_item_reservations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('venue_reservation_id')->references('id')->on('venue_reservations');
+            $table->foreignId('event_id')->references('id')->on('events');
             $table->foreignId('decoration_item_id')->references('id')->on('decoration_items');
+            $table->date('start_date');
+            $table->date('end_date');
             $table->integer('quantity');
             $table->decimal('cost', 10, 2);
             $table->timestamps();

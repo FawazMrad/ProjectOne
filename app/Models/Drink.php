@@ -13,7 +13,7 @@ class Drink extends Model
       'type',
       'description_en',
       'description_ar',
-      'individual_cost',
+      'cost',
       'age_required',
       'image'
     ];

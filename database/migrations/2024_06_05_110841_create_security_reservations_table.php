@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('event_id')->references('id')->on('events');
             $table->date('start_date');
             $table->date('end_date');
-            $table->integer('guards_number');
+            $table->integer('quantity');
             $table->decimal('cost', 10, 2);
             $table->timestamps();
         });

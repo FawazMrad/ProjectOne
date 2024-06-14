@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('event_id')->references('id')->on('events');
             $table->foreignId('furniture_id')->references('id')->on('furniture');
-            $table->integer('number');
+            $table->integer('quantity');
             $table->date('start_date');
             $table->date('end_date');
             $table->integer('cost');

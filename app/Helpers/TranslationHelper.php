@@ -7,34 +7,31 @@ use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class TranslationHelper
 {
-    public static function translateDescription($description)
+    public static function descriptionAndTranslatedDescription($data)
     {
-        $tr = new GoogleTranslate();
-        $targetLanguage = app()->getLocale()=== 'ar' ? 'en' : 'ar';
-        $tr->setSource(app()->getLocale());
-        $tr->setTarget($targetLanguage);
-        return  $tr->translate($description);
+        $description = $data['description'];
 
-    }
-    public static function descriptionAndTranslatedDescription($validatedData)
-    {
-
-        $description = $validatedData['description'];
-        $translatedDescription = TranslationHelper::translateDescription($description);
-
+        // Initialize GoogleTranslate
         $tr = new GoogleTranslate();
 
-        if (app()->getLocale() === 'ar') {
-            $validatedData['description_ar'] = $description;
-            $validatedData['description_en'] = $translatedDescription;
-        } else {
-            $validatedData['description_ar'] = $translatedDescription;
-            $validatedData['description_en'] = $description;
-        }
+        // Translate to English
+        $tr->setSource('auto'); // Automatically detect the source language
+        $tr->setTarget('en');
+        $description_en = $tr->translate($description);
+
+        // Translate to Arabic
+        $tr->setTarget('ar');
+        $description_ar = $tr->translate($description);
+
+        // Add translated descriptions to validatedData
+        $data['description_en'] = $description_en;
+        $data['description_ar'] = $description_ar;
 
         // Remove the original description
-        unset($validatedData['description']);
-        return $validatedData;
+        unset($data['description']);
+
+        return $data;
     }
+
 
 }

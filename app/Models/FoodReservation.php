@@ -11,7 +11,7 @@ class FoodReservation extends Model
     protected $fillable=[
       'food_id',
       'event_id',
-      'number_of_meals',
+      'quantity',
       'total_price',
       'serving_date'
     ];
