@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 255);
             $table->string('type', 50);
-            $table->integer('quantity_in_warehouse');
+            $table->integer('quantity');
             $table->string('image', 50)->nullable();
             $table->integer('cost');
             $table->timestamps();

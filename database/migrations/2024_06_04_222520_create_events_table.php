@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('title', 100);
             $table->text('description_ar')->nullable();
             $table->text('description_en')->nullable();
-            $table->date('start_date')->nullable();
-            $table->date('end_date')->nullable();
+            $table->dateTime('start_date')->nullable();
+            $table->dateTime('end_date')->nullable();
             $table->integer('min_age')->nullable();
             $table->boolean('is_paid')->default(false);
             $table->boolean('is_private')->default(false);

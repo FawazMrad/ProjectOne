@@ -10,7 +10,7 @@ class Security extends Model
     use HasFactory;
     protected $fillable=[
         'clothes_color',
-        'number_of_guards_available',
+        'quantity',
         'cost'
     ];
  public function securityReservations(){

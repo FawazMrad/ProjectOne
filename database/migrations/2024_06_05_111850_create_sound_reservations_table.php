@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('sound_reservations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('event_id')->references('id')->on('events');
+            $table->foreignId('event_id')->references('id')->on('events')->onDelete('cascade');
             $table->foreignId('sound_id')->references('id')->on('sounds');
-            $table->date('start_date');
-            $table->date('end_date');
+            $table->dateTime('start_date');
+            $table->dateTime('end_date');
             $table->decimal('cost', 10, 2);
             $table->timestamps();
         });
