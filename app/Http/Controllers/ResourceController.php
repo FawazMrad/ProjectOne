@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\ResourcesHelper;
 
 use App\Models\Category;
+use App\Models\DecorationCategory;
 use App\Models\DecorationItem;
 use App\Models\DecorationItemReservation;
 use App\Models\Event;
@@ -52,13 +53,15 @@ class ResourceController extends Controller
     }
 
 
-    public function getAvailableResourcesWithQuantity(Request $request)//furniture,decorationItem,security
+
+
+    public function getAvailableResourcesWithQuantity(Request $request) // furniture, decorationItem, security
     {
         $resourceName = $request->input('resourceName');
         $resource = ucfirst($resourceName);
         $resourceSmallLetter = strtolower($resourceName);
 
-        if ($resourceName === 'decoration_item' || $resourceName === 'decorationItem') {
+        if (in_array($resourceName, ['decoration_item', 'decorationItem', 'decoration item'])) {
             $resource = 'DecorationItem';
             $resourceSmallLetter = 'decoration_item';
         }
@@ -74,49 +77,112 @@ class ResourceController extends Controller
 
         $availableResources = [];
         $resourceItems = "App\\Models\\$resource"::all();
-        foreach ($resourceItems as $item) {
-            $reservationModel = "App\\Models\\{$resource}Reservation";
-            $reservedQuantity = $reservationModel::where($resourceSmallLetter . '_id', $item->id)
-                ->where(function ($query) use ($startAndEndDate) {
-                    $query->whereBetween('start_date', [$startAndEndDate['startDate'], $startAndEndDate['endDate']])
-                        ->orWhereBetween('end_date', [$startAndEndDate['startDate'], $startAndEndDate['endDate']])
-                        ->orWhere(function ($query) use ($startAndEndDate) {
-                            $query->where('start_date', '<=', $startAndEndDate['startDate'])
-                                ->where('end_date', '>=', $startAndEndDate['endDate']);
-                        });
-                })
-                ->sum('quantity');
+    foreach ($resourceItems as $item) {
+        $reservationModel = "App\\Models\\{$resource}Reservation";
+        $reservedQuantity = $reservationModel::where($resourceSmallLetter . '_id', $item->id)
+            ->where(function ($query) use ($startAndEndDate) {
+                $query->whereBetween('start_date', [$startAndEndDate['startDate'], $startAndEndDate['endDate']])
+                    ->orWhereBetween('end_date', [$startAndEndDate['startDate'], $startAndEndDate['endDate']])
+                    ->orWhere(function ($query) use ($startAndEndDate) {
+                        $query->where('start_date', '<=', $startAndEndDate['startDate'])
+                            ->where('end_date', '>=', $startAndEndDate['endDate']);
+                    });
+            })
+            ->sum('quantity');
 
-            // Subtract reserved quantity from total quantity
+        // Subtract reserved quantity from total quantity
+
             $availableQuantity = $item->quantity - $reservedQuantity;
-            $availableResources[$resourceSmallLetter . '_items'][] = [
-                'item' => $item,
-                'availableQuantity' => $availableQuantity,
-            ];
-        }
 
-        return response()->json($availableResources, 200);
+       if($resourceSmallLetter==='decoration_item'){
+        $availableResources[$resourceSmallLetter . '_items'][] = [
+            'item' => [
+                'id' => $item->id,
+                'category_id' => $item->category_id,
+                'name' => $item->name,
+                'image' => $item->image,
+                'description' => $item->{'description_' . app()->getLocale()},
+                'individual_cost' => $item->cost,
+                'quantity' => $item->quantity
+            ],
+            'availableQuantity' => $availableQuantity,
+        ];
+            }else {
+           $availableResources[$resourceSmallLetter . '_items'][] = [
+               'item' => [$item],
+               'availableQuantity' => $availableQuantity,
+           ];
+       }
     }
+
+    return response()->json($availableResources, 200);
+}
+
+
 
     public function getAvailableCatering(Request $request)
-    { //Food and Drink
-        $typeSmallLetter = $request->header('type');
+    {
+        // Food and Drink
+        $typeSmallLetter = strtolower($request->header('type'));
         $type = ucfirst($request->header('type'));
-        $getType = "App\\Models\\$type"::all();
-    if (!$getType)
-        return response()->json(['message' => __('resource.cateringNotFound')], 404);
-    return response()->json([$type . ' available' => $getType], 200);
+        $modelClass = "App\\Models\\$type";
 
+        // Check if the class exists and get all records
+        if (!class_exists($modelClass)) {
+            return response()->json(['message' => __('resource.cateringNotFound')], 404);
+        }
+
+        $getType = $modelClass::all();
+
+        // Check if the collection is empty
+        if ($getType->isEmpty()) {
+            return response()->json(['message' => __('resource.cateringNotFound')], 404);
+        }
+
+        $locale = app()->getLocale();
+        $availableItems = $getType->map(function ($item) use ($locale, $typeSmallLetter) {
+            // Initialize ageRequired to 0 for food items
+            $ageRequired = 0;
+
+            // Set ageRequired if the type is drink
+            if ($typeSmallLetter === 'drink') {
+                $ageRequired = $item->age_required;
+            }
+
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'type' => $typeSmallLetter,
+                'description' => $item->{'description_' . $locale},
+                'individual_cost' => $item->cost,
+                'image' => $item->image,
+                'age_required' => $ageRequired,
+            ];
+        });
+
+        return response()->json([$type . ' available' => $availableItems], 200);
     }
-
-    public function getCategories()
+    public function getCategories(Request $request)//EventCats or DecorationCats
     {//Categories
-        $catergories = Category::all();
-        if (!$catergories)
-            return response()->json(['Message' => __('resources.emptyCategories')], 404);
-        return response()->json(['Categories' => $catergories], 200);
-    }
+        $type = $request->input('type');
+        if ($type === 'Decoration') {
+            $categoriesWithTowLangs = DecorationCategory::all();
+        } else {
 
+            $categoriesWithTowLangs = Category::all();
+        }
+        $categories = $categoriesWithTowLangs->map(function ($category) {
+            return [
+                'id' => $category->id,
+                'name' => $category->name,
+                'description' => $category->{'description_' . app()->getLocale()},
+                'icon' => $category->icon
+            ];
+        });
+        if (!$categories)
+            return response()->json(['Message' => __('resources.emptyCategories')], 404);
+        return response()->json(['Categories' => $categories], 200);
+    }
 
 
 }

@@ -11,7 +11,7 @@ class Furniture extends Model
     protected $fillable=[
       'name',
       'type',
-      'quantity_in_warehouse',
+      'quantity',
       'image',
         'cost'
     ];

@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('venue_reservations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('venue_id')->references('id')->on('venues');
-            $table->foreignId('event_id')->references('id')->on('events');
-            $table->date('start_date');
-            $table->date('end_date');
+            $table->foreignId('event_id')->references('id')->on('events')->onDelete('cascade');
+            $table->dateTime('start_date');
+            $table->dateTime('end_date');
             $table->integer('booked_seats')->nullable();
+            $table->integer('booked_vip_seats')->nullable();
             $table->decimal('cost', 10, 2);
             $table->timestamps();
         });

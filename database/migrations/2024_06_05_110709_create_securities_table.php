@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('securities', function (Blueprint $table) {
             $table->id();
             $table->string('clothes_color', 20);
-            $table->integer('number_of_guards_available');
+            $table->integer('quantity');
             $table->integer('cost');
             $table->timestamps();
         });
