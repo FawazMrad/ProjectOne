@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\EnsureUserIsAdmin;
+use Filament\Facades\Filament;
+use Filament\Http\Middleware\Authenticate;
 use Illuminate\Support\Facades\Route;
 use Stichoza\GoogleTranslate\GoogleTranslate;
 use App\Http\Controllers\EventController;
@@ -23,4 +26,3 @@ Route::get('/translate',function (){
     //return $lang->setSource('en')->setTarget('ar')->translate("hellow world.");
 return app()->getLocale();
 });
-

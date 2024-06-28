@@ -13,7 +13,11 @@
         "laravel/sanctum": "^3.2",
         "laravel/tinker": "^2.8",
         "patrickschur/language-detection": "^5.3",
+
+        "spatie/laravel-permission": "^6.7"
+
         "simplesoftwareio/simple-qrcode": "^4.2"
+
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
