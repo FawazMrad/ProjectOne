@@ -18,6 +18,7 @@ return new class extends Migration
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->integer('booked_seats')->nullable();
+            $table->integer('booked_vip_seats')->nullable();
             $table->decimal('cost', 10, 2);
             $table->timestamps();
         });

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\EventHelper;
 use App\Helpers\ResourcesHelper;
 use App\Models\DecorationItemReservation;
 use App\Models\DrinkReservation;
@@ -12,14 +13,17 @@ use App\Models\SecurityReservation;
 use App\Models\SoundReservation;
 use App\Models\Venue;
 use App\Models\VenueReservation;
+use App\Models\Wallet;
 use DateTime;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use LanguageDetection\Language;
 use Illuminate\Http\Request;
 use App\Models\Event;
 use App\Helpers\TranslationHelper;
 use Stichoza\GoogleTranslate\GoogleTranslate;
-
+use App\Helpers\QR_CodeHelper;
+use Illuminate\Support\Facades\Cache;
 
 class EventController extends Controller
 {
@@ -60,9 +64,16 @@ class EventController extends Controller
                 'start_date' => $validatedData['startDate'],
                 'end_date' => $validatedData['endDate'],
             ]);
+            $data['id'] = $event->id;
+            $data['Description_ar'] = $event->description_ar;
+            $data['Description_en'] = $event->description_en;
+            $modelName = 'Event';
+
             DB::commit();
-            if ($event)
+            if ($event) {
+                QR_CodeHelper::generateAndSaveQrCode($data, $modelName);
                 return response()->json(['message' => __('event.completeStepOne'), 'eventId' => $event->id,], 201);
+            }
             return response()->json(['message' => __('event.errorIncompleteStepOne'), 'eventId' => $event->id,], 400);
 
         } catch (\Exception $e) {
@@ -70,7 +81,6 @@ class EventController extends Controller
             return response()->json(['message' => __('event.errorIncompleteStepOne'), 'error' => $e->getMessage()], 400);
         }
     }
-
 
     public function storeStep2(Request $request)
     {
@@ -177,132 +187,144 @@ class EventController extends Controller
             ]);
         }
 
-
+        $ticketPrices = self::calculateTicketPrices($eventId, $totalCost);
         $event = Event::where('id', $eventId)->first();
         $event->category_id = $categoryInfo['id'];
         $event->total_cost = $totalCost;
+        $event->ticket_price = $ticketPrices['regularTicketPrice'];
+        $event->vip_ticket_price = $ticketPrices['vipTicketPrice'];
         $event->save();
-        if ($event)
-            return response()->json(['message' => __('event.completeStepTow')], 201);
-
+        $ownerId = $event->user_id;
+        if ($event) {
+            $withdrawResult=WalletController::withdraw($ownerId, $totalCost);
+            if($withdrawResult['status']===true)
+            return response()->json(['message' => __('event.completeStepTow'), 'event' => $event], 201);
+            return response()->json(['message' => __('event.errorIncompleteStepTow'),'withdraw error'=>$withdrawResult['message']], 201);
+        }
         return response()->json(['message' => __('event.errorIncompleteStepTow')], 400);
     }
 
-    //public function storeStep2(Request $request)
-//    {
-//        $totalCost = 0;
-//        $eventId = $request->input('Venue')->eventId;
-//        //RequestInfo
-//        $categoryInfo = $request->input('Category');
-//        $venueInfo = $request->input('Venue');
-//        $furnitureInfo = $request->input('Furniture');
-//        $decorationItemInfo = $request->input('DecorationItem');
-//        $soundInfo = $request->input('Sound');
-//        $securityInfo = $request->input('Security');
-//        $foodInfo = $request->input('Food');
-//        $drinkInfo = $request->input('Drink');
-//
-//
-//
-//        $venueCost=ResourcesHelper::getCost('Venue', $venueInfo['id'], 1);
-//        $venueReservation = VenueReservation::create([
-//            "venue_id" => $venueInfo['id'],
-//            "event_id" => $venueInfo['eventId'],
-//            "start_date" => $venueInfo['startDate'],
-//            "end_date" => $venueInfo['endDate'],
-//            "cost" => $venueCost
-//        ]);
-//        $furnitureCost=ResourcesHelper::getCost('Furniture', $furnitureInfo['id'], $furnitureInfo['quantity']);
-//        $furnitureReservation = FurnitureReservation::create([
-//            "furniture_id" => $furnitureInfo['id'],
-//            "event_id" => $furnitureInfo['eventId'],
-//            "start_date" => $furnitureInfo['startDate'],
-//            "end_date" => $furnitureInfo['endDate'],
-//            "quantity" => $furnitureInfo['quantity'],
-//            "cost" => $furnitureCost
-//        ]);
-//        $decorationItemCost=ResourcesHelper::getCost('DecorationItem', $decorationItemInfo['id'], $decorationItemInfo['quantity']);
-//        $decorationItemReservation = DecorationItemReservation::create([
-//            "decoration_item_id" => $decorationItemInfo['id'],
-//            "event_id" => $decorationItemInfo['eventId'],
-//            "start_date" => $decorationItemInfo['startDate'],
-//            "end_date" => $decorationItemInfo['endDate'],
-//            "quantity" => $decorationItemInfo['quantity'],
-//            "cost" => $decorationItemCost
-//        ]);
-//        $soundCost=ResourcesHelper::getCost('Sound', $soundInfo['id'], 1);
-//        $soundReservation = SoundReservation::create([
-//            "sound_id" => $soundInfo['id'],
-//            "event_id" => $soundInfo['eventId'],
-//            "start_date" => $soundInfo['startDate'],
-//            "end_date" => $soundInfo['endDate'],
-//            "cost" => $soundCost
-//        ]);
-//        $securityCost=$securityCost;
-//        $securityReservation = SecurityReservation::create([
-//            "security_id" => $securityInfo['id'],
-//            "event_id" => $securityInfo['eventId'],
-//            "start_date" => $securityInfo['startDate'],
-//            "end_date" => $securityInfo['endDate'],
-//            "quantity" => $securityInfo['quantity'],
-//            "cost" => $securityCost
-//        ]);
-//        $foodCost=ResourcesHelper::getCost('Food', $foodInfo['id'], $foodInfo['quantity']);
-//        $foodReservation = FoodReservation::create([
-//            "food_id" => $foodInfo['id'],
-//            "event_id" => $foodInfo['eventId'],
-//            "quantity" => $foodInfo['quantity'],
-//            "serving_date" => $foodInfo['servingDate'],
-//            "total_price" => $foodCost
-//        ]);
-//        $drinkCost=ResourcesHelper::getCost('Drink', $drinkInfo['id'], $drinkInfo['quantity']);
-//        $drinkReservation = DrinkReservation::create([
-//            "drink_id" => $drinkInfo['id'],
-//            "event_id" => $drinkInfo['eventId'],
-//            "quantity" => $drinkInfo['quantity'],
-//            "serving_date" => $drinkInfo['servingDate'],
-//            "total_price" => $drinkCost
-//        ]);
-//        $totalCost=$venueCost+$furnitureCost+$decorationItemCost+$soundCost+$securityCost+$foodCost+$drinkCost;
-//
-//        $event=Event::where('id',$eventId)->first();
-//        $event->category_id->$request->input('Category')->id;
-//        $event('total_cost')->$totalCost;
-//
-//        if($venueReservation&&$furnitureReservation&&$decorationItemReservation&&$soundReservation&&$securityReservation&&$foodReservation&&$drinkReservation)
-//            return response()->json(['message'=>__('event.completeStepTow')],201);
-//        return response()->json(['message'=>__('event.errorIncompleteStepTow')],400);
-//    }
+    public static function calculateTicketPrices($eventId, $totalCost)
+    {
+        $numberOfRegularChairs = ResourcesHelper::getNumberOfRegularChairReserved($eventId);
+        $numberOfVipChairs = ResourcesHelper::getNumberOfVipChairReserved($eventId);
+
+        $totalChairs = $numberOfRegularChairs + $numberOfVipChairs;
+
+        // Calculate rates
+        if ($totalChairs > 0) {
+            $regularRate = $numberOfRegularChairs / $totalChairs;
+            $vipRate = $numberOfVipChairs / $totalChairs;
+        }
+
+        // Calculate ticket prices
+        $regularTicketPrice = 0;
+        $vipTicketPrice = 0;
+        // dd($numberOfVipChairs,$vipRate,$numberOfRegularChairs,$regularRate,$totalChairs,$totalCost);
+        if ($numberOfVipChairs > 0 && $numberOfRegularChairs > 0) {
+            $vipTicketPrice = ($totalCost * $vipRate) / $numberOfVipChairs;
+            $regularTicketPrice = ($totalCost * $regularRate) / $numberOfRegularChairs;
+            return ['regularTicketPrice' => $regularTicketPrice, 'vipTicketPrice' => $vipTicketPrice];
+        } else if ($numberOfRegularChairs > 0 && $numberOfVipChairs <= 0) {
+            $regularTicketPrice = ($totalCost * $regularRate) / $numberOfRegularChairs;
+            return ['regularTicketPrice' => $regularTicketPrice, 'vipTicketPrice' => 0];
+        } else if ($numberOfRegularChairs <= 0 && $numberOfVipChairs > 0) {
+            $vipTicketPrice = ($totalCost * $vipRate) / $numberOfVipChairs;
+            return ['regularTicketPrice' => 0, 'vipTicketPrice' => $vipTicketPrice];
+        } else {
+            // Get the venue capacity if no chairs are reserved
+            $capacity = ResourcesHelper::getVenueCapacity($eventId);
+            if ($capacity > 0) {
+                return ['regularTicketPrice' => $totalCost / $capacity, 'vipTicketPrice' => 0];
+            }
+        }
+        throw new Exception("Invalid venue capacity for event ID: $eventId");
+    }
+
     public function remove(Request $request)
     {
         $eventId = $request->input('eventId');
+        $event = Event::find($eventId);
+        $ownerId = $event->user_id;
         $currentDateTimeStr = $request->input('currentDateTime');
         $desire = $request->input('desire');
-
-        // Convert currentDateTime to DateTime object
-        $currentDateTime = new DateTime($currentDateTimeStr);
-
-        $event = Event::find($eventId);
-
-        // Check if event exists
-        if (!$event) {
-            return response()->json(['message' => __('event.notFound')], 404);
-        }
-
-        $eventStartDate = new DateTime($event->start_date);
-        $dateDifference = $currentDateTime->diff($eventStartDate);
-
+        $dates = EventHelper::getEventStartAndEndDate($currentDateTimeStr, $eventId);
         if ($desire == 'delete') {
-            if ($currentDateTime < $eventStartDate && $dateDifference->days <= 7) {
-                return response()->json(['message' => __('event.deleteErrorBeforeEvent')], 400);
-            } else {
+            if ($dates['currentDateTime'] < $dates['eventStartDate'] && $dates['creationToActionDiff']->h <= 1 && $dates['creationToActionDiff']->days == 0) {
+                // Delete the event if it was created less than 2 hours ago
+                WalletController::depositStatic(0.02, $ownerId, $event->total_cost);
                 $event->delete();
                 return response()->json(['message' => __('event.deleteSuccess')], 200);
             }
-        } else {
+            if ($dates['currentDateTime'] < $dates['eventStartDate'] && $dates['dateDifference']->days <= 7) {
+                return response()->json(['message' => __('event.deleteErrorBeforeEvent')], 400);
+            } else {
+                WalletController::depositStatic(0.02, $ownerId, $event->total_cost);
+                $event->delete();
+                return response()->json(['message' => __('event.deleteSuccess')], 200);
+            }
+        } else if ($desire === 'cancel') { // for canceling the event creation
             $event->delete();
             return response()->json(['message' => __('event.deleteSuccess')], 200);
         }
     }
 
+    public function getPrices(Request $request)
+    {
+        $eventId = $request->input('eventId');
+        $event = Event::find($eventId);
+        $regularTicketPrice = $event->ticket_price;
+        $vipTicketPrice = $event->vip_ticket_price;
+        $totalCost = $event->total_cost;
+        return response()->json([
+            'totalCost' => $totalCost,
+            'regularTicketPrice' => $regularTicketPrice,
+            'vipTicketPrice' => $vipTicketPrice], 200);
+    }
+
+    public function adjustPrices(Request $request)
+    {
+
+        $newRegularTicketPrice = $request->input('newRegularTicketPrice');
+        $newVipTicketPrice = $request->input('newVipTicketPrice');
+        $eventId = $request->input('eventId');
+        $event = Event::find($eventId);
+        $eventId = $request->input('eventId');
+        $event = Event::find($eventId);
+        $currentDateTimeStr = $request->input('currentDateTime');
+        $desire = $request->input('desire');
+        $dates = EventHelper::getEventStartAndEndDate($currentDateTimeStr, $eventId);
+
+        if ($dates['currentDateTime'] < $dates['eventStartDate'] && $dates['creationToActionDiff']->h <= 1 && $dates['creationToActionDiff']->days == 0) {
+            // adjust prices of the event if it was created less than 2 hours ago
+            if ($event->ticket_price > 0 && $event->vip_ticket_price > 0) {
+                $event->ticket_price = $newRegularTicketPrice;
+                $event->vip_ticket_price = $newVipTicketPrice;
+                $event->save();
+                return response()->json(['message' => __('event.priceAdjustSuccess')], 200);
+            } else if ($event->ticket_price > 0 && $event->vip_ticket_price <= 0) {
+                $event->ticket_price = $newRegularTicketPrice;
+                $event->save();
+                return response()->json(['message' => __('event.priceAdjustSuccess')], 200);
+            } else if ($event->ticket_price <= 0 && $event->vip_ticket_price > 0) {
+                $event->vip_ticket_price = $newVipTicketPrice;
+                $event->save();
+                return response()->json(['message' => __('event.priceAdjustSuccess')], 200);
+            }
+        }
+        if ($dates['currentDateTime'] < $dates['eventStartDate'] && $dates['dateDifference']->days <= 7) {
+            return response()->json(['message' => __('event.adjustPricesErrorBeforeEvent')], 400);
+        } else {
+            if ($event->ticket_price > 0 && $event->vip_ticket_price <= 0) {
+                $event->ticket_price = $newRegularTicketPrice;
+                $event->save();
+                return response()->json(['message' => __('event.priceAdjustSuccess')], 200);
+            } else if ($event->ticket_price <= 0 && $event->vip_ticket_price > 0) {
+                $event->vip_ticket_price = $newVipTicketPrice;
+                $event->save();
+                return response()->json(['message' => __('event.priceAdjustSuccess')], 200);
+            }
+        }
+
+    }
 }

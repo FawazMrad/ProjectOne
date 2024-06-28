@@ -26,8 +26,9 @@ return new class extends Migration
             $table->enum('attendance_type', ['invitation', 'ticket']);
             $table->decimal('total_cost', 10, 2)->default(0);
             $table->decimal('ticket_price', 10, 2)->default(0);
+            $table->decimal('vip_ticket_price', 10, 2)->default(0);
             $table->string('image', 255)->nullable();
-            $table->string('qr_code')->nullable();
+            $table->text('qr_code')->nullable();
             $table->float('rating')->default(0);
             $table->timestamps();
         });

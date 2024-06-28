@@ -94,7 +94,7 @@ class ResourceController extends Controller
 
             $availableQuantity = $item->quantity - $reservedQuantity;
 
-
+       if($resourceSmallLetter==='decoration_item'){
         $availableResources[$resourceSmallLetter . '_items'][] = [
             'item' => [
                 'id' => $item->id,
@@ -107,6 +107,12 @@ class ResourceController extends Controller
             ],
             'availableQuantity' => $availableQuantity,
         ];
+            }else {
+           $availableResources[$resourceSmallLetter . '_items'][] = [
+               'item' => [$item],
+               'availableQuantity' => $availableQuantity,
+           ];
+       }
     }
 
     return response()->json($availableResources, 200);
