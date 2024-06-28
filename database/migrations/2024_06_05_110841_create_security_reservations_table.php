@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('security_reservations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('security_id')->references('id')->on('securities');
-            $table->foreignId('event_id')->references('id')->on('events');
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->integer('guards_number');
+            $table->foreignId('event_id')->references('id')->on('events')->onDelete('cascade');
+            $table->dateTime('start_date');
+            $table->dateTime('end_date');
+            $table->integer('quantity');
             $table->decimal('cost', 10, 2);
             $table->timestamps();
         });

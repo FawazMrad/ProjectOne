@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('type', 50);
             $table->string('description_en', 255)->nullable();
             $table->string('description_ar', 255)->nullable();
-            $table->integer('individual_cost');
+            $table->integer('cost');
             $table->integer('age_required')->nullable();
             $table->string('image', 255)->nullable();
             $table->timestamps();

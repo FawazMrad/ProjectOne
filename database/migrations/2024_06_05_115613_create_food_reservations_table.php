@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('food_reservations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('food_id')->references('id')->on('food');
-            $table->foreignId('event_id')->references('id')->on('events');
-            $table->integer('number_of_meals');
+            $table->foreignId('event_id')->references('id')->on('events')->onDelete('cascade');
+            $table->integer('quantity');
             $table->integer('total_price');
-            $table->date('serving_date');
+            $table->dateTime('serving_date');
             $table->timestamps();
         });
     }

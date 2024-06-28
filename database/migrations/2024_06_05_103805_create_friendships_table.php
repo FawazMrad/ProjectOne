@@ -15,8 +15,8 @@ return new class extends Migration
             $table->foreignId('sender_id')->references('id')->on('users');
             $table->foreignId('receiver_id')->references('id')->on('users');
                         $table->enum('status', ['pending', 'accepted', 'blocked']);
-            $table->date('requested_at');
-            $table->date('accepted_at')->nullable();
+            $table->datetime('requested_at');
+            $table->datetime('accepted_at')->nullable();
             $table->primary(['sender_id', 'receiver_id']);
             $table->timestamps();
         });

@@ -11,7 +11,7 @@ class DrinkReservation extends Model
     protected $fillable=[
         'drink_id',
         'event_id',
-        'number_of_drinks',
+        'quantity',
         'total_price',
         'serving_date'
     ];

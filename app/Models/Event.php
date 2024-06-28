@@ -67,4 +67,7 @@ class Event extends Model
     {
         return $this->hasMany(DrinkReservation::class);
     }
+    public function decorationItemReservations(){
+        return $this->hasMany(DecorationItemReservation::class);
+    }
 }

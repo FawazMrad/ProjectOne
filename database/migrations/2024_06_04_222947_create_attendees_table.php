@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('event_id')->references('id')->on('events');
             $table->enum('status', ['invited', 'attending', 'purchased', 'cancelled']);
             $table->boolean('checked_in')->default(false);
-            $table->date('purchase_date')->nullable();
+            $table->dateTime('purchase_date')->nullable();
             $table->decimal('ticket_price', 10, 2)->default(0);
             $table->enum('ticket_type', ['regular', 'VIP']);
             $table->string('seat_number', 20)->nullable();
