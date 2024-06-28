@@ -3,14 +3,19 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasName;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser, HasName
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -59,18 +64,34 @@ class User extends Authenticatable
     {
         return $this->hasMany(Attendee::class);
     }
-    public function preference(){
+
+    public function preference()
+    {
         return $this->hasOne(Preference::class);
     }
-    public function wallet(){
+
+    public function wallet()
+    {
         return $this->hasOne(wallet::class);
     }
+
     public function ratings()
     {
         return $this->hasMany(Rating::class);
     }
+
     public function favourites()
     {
         return $this->hasMany(Favourite::class);
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return (Auth::user()->hasRole('admin'));
+    }
+
+    public function getFilamentName(): string
+    {
+        return "{$this->first_name} {$this->last_name}";
     }
 }
