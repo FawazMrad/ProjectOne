@@ -9,7 +9,7 @@ class DecorationItemReservation extends Model
 {
     use HasFactory;
     protected  $fillable=[
-      'event_id',
+        'event_id',
         'decoration_item_id',
         'start_date',
         'end_date',

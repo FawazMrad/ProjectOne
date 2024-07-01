@@ -81,9 +81,6 @@ class ResourcesHelper{
         }
         return $numberOfVipChairs;
     }
-
-
-
     public static function getVenueCapacity($eventId){
         $event = Event::find($eventId);
         $capacity=VenueReservation::where('event_id',$eventId)

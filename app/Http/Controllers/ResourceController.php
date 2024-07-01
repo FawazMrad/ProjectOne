@@ -120,11 +120,62 @@ class ResourceController extends Controller
 
 
 
+//    public function getAvailableCatering(Request $request)
+//    {
+//        $eventId=$request->input('eventId');
+//        $eventRequiredAge=Event::find($eventId)->min_age;
+//        // Food and Drink
+//        $typeSmallLetter = strtolower($request->input('type'));
+//        $type = ucfirst($request->input('type'));
+//        $modelClass = "App\\Models\\$type";
+//
+//        // Check if the class exists and get all records
+//        if (!class_exists($modelClass)) {
+//            return response()->json(['message' => __('resource.cateringNotFound')], 404);
+//        }
+//
+//        $getType = $modelClass::all();
+//
+//        // Check if the collection is empty
+//        if ($getType->isEmpty()) {
+//            return response()->json(['message' => __('resource.cateringNotFound')], 404);
+//        }
+//
+//        $locale = app()->getLocale();
+//        $availableItems = $getType->map(function ($item) use ($locale, $typeSmallLetter,$eventRequiredAge) {
+//            // Initialize ageRequired to 0 for food items
+//            $ageRequired = 0;
+//
+//            // Set ageRequired if the type is drink
+//            if ($typeSmallLetter === 'drink') {
+//                $ageRequired = $item->age_required;
+//                if($eventRequiredAge<$ageRequired)
+//                {
+//
+//                }
+//
+//            }
+//
+//            return [
+//                'id' => $item->id,
+//                'name' => $item->name,
+//                'type' => $typeSmallLetter,
+//                'description' => $item->{'description_' . $locale},
+//                'individual_cost' => $item->cost,
+//                'image' => $item->image,
+//                'age_required' => $ageRequired,
+//            ];
+//        });
+//
+//        return response()->json([$type . ' available' => $availableItems], 200);
+//    }
     public function getAvailableCatering(Request $request)
     {
+        $eventId = $request->input('eventId');
+        $eventRequiredAge = Event::find($eventId)->min_age;
         // Food and Drink
-        $typeSmallLetter = strtolower($request->header('type'));
-        $type = ucfirst($request->header('type'));
+        $typeSmallLetter = strtolower($request->input('type'));
+        $type = ucfirst($request->input('type'));
         $modelClass = "App\\Models\\$type";
 
         // Check if the class exists and get all records
@@ -140,15 +191,21 @@ class ResourceController extends Controller
         }
 
         $locale = app()->getLocale();
-        $availableItems = $getType->map(function ($item) use ($locale, $typeSmallLetter) {
+        $availableItems = $getType->filter(function ($item) use ($eventRequiredAge, $typeSmallLetter) {
             // Initialize ageRequired to 0 for food items
             $ageRequired = 0;
 
             // Set ageRequired if the type is drink
             if ($typeSmallLetter === 'drink') {
                 $ageRequired = $item->age_required;
+                // Skip this item if the event's required age is less than the drink's required age
+                if ($eventRequiredAge < $ageRequired) {
+                    return false;
+                }
             }
 
+            return true;
+        })->map(function ($item) use ($locale, $typeSmallLetter) {
             return [
                 'id' => $item->id,
                 'name' => $item->name,
@@ -156,12 +213,13 @@ class ResourceController extends Controller
                 'description' => $item->{'description_' . $locale},
                 'individual_cost' => $item->cost,
                 'image' => $item->image,
-                'age_required' => $ageRequired,
+                'age_required' => $item->age_required ?? 0,
             ];
         });
 
         return response()->json([$type . ' available' => $availableItems], 200);
     }
+
     public function getCategories(Request $request)//EventCats or DecorationCats
     {//Categories
         $type = $request->input('type');
