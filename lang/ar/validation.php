@@ -169,6 +169,7 @@ return [
     |
     */
     'logout'=>'تم تسجيل الخروج بنجاح!',
+    'validationError'=>'لا يمكننا التحقق من صحة بياناتك',
     'custom' => [
         'attribute-name' => [
             'rule-name' => 'custom-message',

@@ -72,9 +72,9 @@ class EventController extends Controller
             DB::commit();
             if ($event) {
                 QR_CodeHelper::generateAndSaveQrCode($data, $modelName);
-                return response()->json(['message' => __('event.completeStepOne'), 'eventId' => $event->id,], 201);
+                return response()->json(['message' => __('event.completeStepOne'), 'event' => $event], 201);
             }
-            return response()->json(['message' => __('event.errorIncompleteStepOne'), 'eventId' => $event->id,], 400);
+            return response()->json(['message' => __('event.errorIncompleteStepOne'), 'event' => $event->id,], 400);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -562,9 +562,6 @@ class EventController extends Controller
         return response()->json(['message' => __('event.updateReservationsSuccess')]);
     }
 
-    public function updateEventCateringReservations(Request $request)
-    {
 
-    }
 
 }

@@ -170,11 +170,13 @@ return [
     |
     */
 'logout'=>'loggedOut Successfully!',
+ 'validationError'=>'we cannot validate you',
     'custom' => [
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
     ],
+
 
     /*
     |--------------------------------------------------------------------------
