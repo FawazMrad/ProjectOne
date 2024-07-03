@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\User;
 
 use App\Helpers\QR_CodeHelper;
+use App\Helpers\WalletHelper;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\WalletController;
 use App\Models\User;
 use Illuminate\Auth\Events\Validated;
 use Illuminate\Http\Request;
@@ -44,6 +46,7 @@ class AuthController extends Controller
             'profile_pic' => $request->input('profilePic'),
         ]);
         $user->save();
+        WalletHelper::createWallet($user->id);
         $qrData=[
             'id'=>$user->id,
             'user name'=>" $user->first_name  $user->last_name",

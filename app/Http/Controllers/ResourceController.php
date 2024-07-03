@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\EventHelper;
 use App\Helpers\ResourcesHelper;
 
 use App\Models\Category;
@@ -30,7 +31,7 @@ class ResourceController extends Controller
             return response()->json(['error' => __('resource.invalidType')], 400);
         }
 
-        $startAndEndDate = ResourcesHelper::getStartAndEndDateForEvent($eventId);
+        $startAndEndDate = EventHelper::getStartAndEndDateForEvent($eventId);
 
 
         if (empty($startAndEndDate['startDate']) || empty($startAndEndDate['endDate'])) {
@@ -73,7 +74,7 @@ class ResourceController extends Controller
             return response()->json(['error' => __('event.IdNotFoundOrDates')], 404);
         }
 
-        $startAndEndDate = ResourcesHelper::getStartAndEndDateForEvent($eventId);
+        $startAndEndDate = EventHelper::getStartAndEndDateForEvent($eventId);
 
         $availableResources = [];
         $resourceItems = "App\\Models\\$resource"::all();
@@ -117,63 +118,10 @@ class ResourceController extends Controller
 
     return response()->json($availableResources, 200);
 }
-
-
-
-//    public function getAvailableCatering(Request $request)
-//    {
-//        $eventId=$request->input('eventId');
-//        $eventRequiredAge=Event::find($eventId)->min_age;
-//        // Food and Drink
-//        $typeSmallLetter = strtolower($request->input('type'));
-//        $type = ucfirst($request->input('type'));
-//        $modelClass = "App\\Models\\$type";
-//
-//        // Check if the class exists and get all records
-//        if (!class_exists($modelClass)) {
-//            return response()->json(['message' => __('resource.cateringNotFound')], 404);
-//        }
-//
-//        $getType = $modelClass::all();
-//
-//        // Check if the collection is empty
-//        if ($getType->isEmpty()) {
-//            return response()->json(['message' => __('resource.cateringNotFound')], 404);
-//        }
-//
-//        $locale = app()->getLocale();
-//        $availableItems = $getType->map(function ($item) use ($locale, $typeSmallLetter,$eventRequiredAge) {
-//            // Initialize ageRequired to 0 for food items
-//            $ageRequired = 0;
-//
-//            // Set ageRequired if the type is drink
-//            if ($typeSmallLetter === 'drink') {
-//                $ageRequired = $item->age_required;
-//                if($eventRequiredAge<$ageRequired)
-//                {
-//
-//                }
-//
-//            }
-//
-//            return [
-//                'id' => $item->id,
-//                'name' => $item->name,
-//                'type' => $typeSmallLetter,
-//                'description' => $item->{'description_' . $locale},
-//                'individual_cost' => $item->cost,
-//                'image' => $item->image,
-//                'age_required' => $ageRequired,
-//            ];
-//        });
-//
-//        return response()->json([$type . ' available' => $availableItems], 200);
-//    }
-    public function getAvailableCatering(Request $request)
+    public function getAvailableCatering(Request $request) //food drink
     {
         $eventId = $request->input('eventId');
         $eventRequiredAge = Event::find($eventId)->min_age;
-        // Food and Drink
         $typeSmallLetter = strtolower($request->input('type'));
         $type = ucfirst($request->input('type'));
         $modelClass = "App\\Models\\$type";
