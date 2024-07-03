@@ -19,14 +19,7 @@ use Carbon\Carbon;
 class ResourcesHelper{
 
 
-    public static function getStartAndEndDateForEvent($eventId)
-    {
-        $event = Event::find($eventId);
-        return [
-            'startDate' => Carbon::parse($event->start_date)->subHours(4)->toDateTimeString(),
-            'endDate' => Carbon::parse($event->end_date)->addHours(4)->toDateTimeString(),
-        ];
-    }
+
     public static function getCost($resource, $resourceId, $quantity)
     {
         // Fetch the model instance

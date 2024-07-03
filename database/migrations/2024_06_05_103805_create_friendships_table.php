@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('friendships', function (Blueprint $table) {
             $table->foreignId('sender_id')->references('id')->on('users');
             $table->foreignId('receiver_id')->references('id')->on('users');
-                        $table->enum('status', ['pending', 'accepted', 'blocked']);
-            $table->datetime('requested_at');
-            $table->datetime('accepted_at')->nullable();
+            $table->enum('status', ['FOLLOWING', 'MUTUAL', 'BLOCKED']);
+            $table->datetime('mutual_at')->nullable();
+            $table->unsignedBigInteger('blocker_id')->nullable();
             $table->primary(['sender_id', 'receiver_id']);
             $table->timestamps();
         });

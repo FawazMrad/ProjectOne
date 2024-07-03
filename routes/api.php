@@ -3,6 +3,7 @@
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\User\AuthController;
+use App\Http\Controllers\User\FriendshipController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -25,9 +26,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/users/signUp',[AuthController::class,'signUp']);//for user signup
 Route::post('/users/signIn',[AuthController::class,'signIn']);//for user traditional signIn
 Route::post('/users/googleSignIn',[AuthController::class,'googleSignIn']);//for user google signIn
+
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/users/signOut', [AuthController::class, 'signOut']);//for user sign out
     Route::post('/events/step1', [EventController::class, 'storeStep1']);//FirstStepOfEVENT-Creation
+    Route::post('/users/signOut', [AuthController::class, 'signOut']);//for user sign out
     Route::post('/events/step2', [EventController::class, 'storeStep2']);//SecondStepOfEVENT-Creation
     Route::post('/events/remove', [EventController::class, 'remove']);//Remove events in the body we have a parameter named desire it's values= delete , cancel
     Route::post('/resources/available', [ResourceController::class, 'getAvailableResources']);//getTheAvailableResources(Venues,Sound)
@@ -42,4 +44,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/events/getEventReservations',[EventController::class,'getEventReservations']  ); //(first step for event update)get event's reservations
     Route::post('/events/updateEventQuantitiesReservations',[EventController::class,'updateEventQuantitiesReservations']  ); //(second step for event update)// furniture, decoration item , security ,food ,drink {for food and drink I want a servingDate}
     Route::post('/events/updateEventSoundAndVenueReservations',[EventController::class,'updateEventSoundAndVenueReservations']  ); //(second step for event update)// sound, venue {If you want to delete a previous reservation just give it to me like what you give me to create a new reservation}
+    //for friendships
+    Route::post('/users/sendFollowRequest',[FriendshipController::class,'sendFollowRequest']  );//for sending follow requests
+    Route::post('/users/followBack',[FriendshipController::class,'followBack']  );//for following back requests
+    Route::post('/users/blockUser',[FriendshipController::class,'blockUser']  );//for blocking requests
+    Route::post('/users/cancelFollowing',[FriendshipController::class,'cancelFollowing']  );//for canceling following
+    Route::get('/users/getFollowers',[FriendshipController::class,'getFollowers']  );//for getting followers
+    Route::get('/users/getFollowing',[FriendshipController::class,'getFollowing']  );//for getting Following
+    Route::get('/users/getBlocked',[FriendshipController::class,'getBlocked']  );//for getting blocked
+////////////////////////////
+
 });

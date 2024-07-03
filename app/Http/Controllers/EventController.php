@@ -85,7 +85,9 @@ class EventController extends Controller
     public function storeStep2(Request $request)
     {
         $totalCost = 0;
-        $eventId = $request->input('Venue')[0]['eventId'];
+        $eventId = $request->input('eventId');
+        $event = Event::find($eventId);
+        $dates = EventHelper::getEventDates($eventId);
         // RequestInfo
         $categoryInfo = $request->input('Category')[0];
         $venueInfo = $request->input('Venue')[0];
@@ -101,9 +103,9 @@ class EventController extends Controller
         $totalCost += $venueCost;
         $venueReservation = VenueReservation::create([
             "venue_id" => $venueInfo['id'],
-            "event_id" => $venueInfo['eventId'],
-            "start_date" => $venueInfo['startDate'],
-            "end_date" => $venueInfo['endDate'],
+            "event_id" => $eventId,
+            "start_date" => $dates['startDate'],
+            "end_date" => $dates['endDate'],
             "cost" => $venueCost
         ]);
 
@@ -113,9 +115,9 @@ class EventController extends Controller
             $totalCost += $furnitureCost;
             FurnitureReservation::create([
                 "furniture_id" => $furnitureItem['id'],
-                "event_id" => $furnitureItem['eventId'],
-                "start_date" => $furnitureItem['startDate'],
-                "end_date" => $furnitureItem['endDate'],
+                "event_id" => $eventId,
+                "start_date" => $dates['startDate'],
+                "end_date" => $dates['endDate'],
                 "quantity" => $furnitureItem['quantity'],
                 "cost" => $furnitureCost
             ]);
@@ -127,9 +129,9 @@ class EventController extends Controller
             $totalCost += $decorationItemCost;
             DecorationItemReservation::create([
                 "decoration_item_id" => $decorationItem['id'],
-                "event_id" => $decorationItem['eventId'],
+                "event_id" => $eventId,
                 "start_date" => $decorationItem['startDate'],
-                "end_date" => $decorationItem['endDate'],
+                "end_date" => $dates['endDate'],
                 "quantity" => $decorationItem['quantity'],
                 "cost" => $decorationItemCost
             ]);
@@ -141,7 +143,7 @@ class EventController extends Controller
             $totalCost += $soundCost;
             SoundReservation::create([
                 "sound_id" => $soundItem['id'],
-                "event_id" => $soundItem['eventId'],
+                "event_id" => $eventId,
                 "start_date" => $soundItem['startDate'],
                 "end_date" => $soundItem['endDate'],
                 "cost" => $soundCost
@@ -154,9 +156,9 @@ class EventController extends Controller
             $totalCost += $securityCost;
             SecurityReservation::create([
                 "security_id" => $securityItem['id'],
-                "event_id" => $securityItem['eventId'],
-                "start_date" => $securityItem['startDate'],
-                "end_date" => $securityItem['endDate'],
+                "event_id" => $eventId,
+                "start_date" => $dates['startDate'],
+                "end_date" => $dates['endDate'],
                 "quantity" => $securityItem['quantity'],
                 "cost" => $securityCost
             ]);
@@ -168,7 +170,7 @@ class EventController extends Controller
             $totalCost += $foodCost;
             FoodReservation::create([
                 "food_id" => $foodItem['id'],
-                "event_id" => $foodItem['eventId'],
+                "event_id" => $eventId,
                 "quantity" => $foodItem['quantity'],
                 "serving_date" => $foodItem['servingDate'],
                 "total_price" => $foodCost
@@ -180,7 +182,7 @@ class EventController extends Controller
             $totalCost += $drinkCost;
             DrinkReservation::create([
                 "drink_id" => $drinkItem['id'],
-                "event_id" => $drinkItem['eventId'],
+                "event_id" => $eventId,
                 "quantity" => $drinkItem['quantity'],
                 "serving_date" => $drinkItem['servingDate'],
                 "total_price" => $drinkCost
@@ -188,7 +190,6 @@ class EventController extends Controller
         }
 
         $ticketPrices = self::calculateTicketPrices($eventId, $totalCost);
-        $event = Event::where('id', $eventId)->first();
         $event->category_id = $categoryInfo['id'];
         $event->total_cost = $totalCost;
         $event->ticket_price = $ticketPrices['regularTicketPrice'];
@@ -249,13 +250,13 @@ class EventController extends Controller
         $desire = $request->input('desire');
         $dates = EventHelper::getEventDates($eventId);
         if ($desire == 'delete') {
-            if ($dates['currentDateTime'] < $dates['eventStartDate'] && $dates['creationToActionDiff']->h <= 1 && $dates['creationToActionDiff']->days == 0) {
+            if ($dates['currentDateTime'] < $dates['startDate'] && $dates['creationToActionDiff']->h <= 1 && $dates['creationToActionDiff']->days == 0) {
                 // Delete the event if it was created less than 2 hours ago
                 WalletController::depositStatic(0.02, $ownerId, $event->total_cost);
                 $event->delete();
                 return response()->json(['message' => __('event.deleteSuccess')], 200);
             }
-            if ($dates['currentDateTime'] < $dates['eventStartDate'] && $dates['dateDifference']->days <= 7) {
+            if ($dates['currentDateTime'] < $dates['startDate'] && $dates['dateDifference']->days <= 7) {
                 return response()->json(['message' => __('event.deleteErrorBeforeEvent')], 400);
             } else {
                 WalletController::depositStatic(0.02, $ownerId, $event->total_cost);
@@ -289,7 +290,7 @@ class EventController extends Controller
         $eventId = $request->input('eventId');
         $event = Event::find($eventId);
         $dates = EventHelper::getEventDates($eventId);
-        if ($dates['currentDateTime'] < $dates['eventStartDate'] && $dates['dateDifference']->days <= 7) {
+        if ($dates['currentDateTime'] < $dates['startDate'] && $dates['dateDifference']->days <= 7) {
             return response()->json(['message' => __('event.adjustPricesErrorBeforeEvent')], 400);
         } else {
             if ($event->ticket_price > 0 && $event->vip_ticket_price > 0) {
@@ -434,11 +435,14 @@ class EventController extends Controller
 
                     $reservation->$costAttribute = $newCost;
                     $reservation->quantity = $newQuantity;
-                    if($type === 'furniture'  ||$type === 'security'  ||$type === 'decorationItem'   ) {
+                    if ($type === 'decorationItem') {
                         $reservation->start_date = $newItem['newStartDate'];
-                        $reservation->end_date = $newItem['newEndDate'];
-                    }else{
-                        $reservation->serving_date=$newItem['servingDate'];
+                        $reservation->end_date = $dates['endDate'];
+                    } else if ($type === 'food' || $type === 'drink') {
+                        $reservation->serving_date = $newItem['servingDate'];
+                    } else { //furniture ,security,
+                        $reservation->start_date = $dates['startDate'];
+                        $reservation->end_date = $dates['endDate'];
                     }
                     $reservation->save();
                     $updateCost -= $oldCost;
@@ -462,11 +466,14 @@ class EventController extends Controller
                     'quantity' => $newQuantity,
                     $costAttribute => $cost,
                 ];
-                if ($type === 'furniture' || $type === 'security' || $type === 'decorationItem') {
+                if ($type === 'decorationItem') {
                     $reservationData['start_date'] = $newItem['newStartDate'];
-                    $reservationData['end_date'] = $newItem['newEndDate'];
-                } else {
+                    $reservationData['end_date'] = $dates['endDate'];
+                } else if ($type === 'food' || $type === 'drink') {
                     $reservationData['serving_date'] = $newItem['servingDate'];
+                } else { //furniture ,security,
+                    $reservationData['start_date'] = $dates['startDate'];
+                    $reservationData['end_date'] = $dates['endDate'];
                 }
 
                 "App\\Models\\$modelReservation"::create($reservationData);
@@ -540,13 +547,25 @@ class EventController extends Controller
                 $withdrawResult = WalletController::withdraw($ownerId, $cost);
                 if ($withdrawResult['status'] === false) //user cannot pay
                     return response()->json(['withdraw error' => $withdrawResult['message']], 400);
-
+                $reservationData = [
+                    'eventId' => $eventId,
+                    $modelNameId => $newItem['id'],
+                    'startDate' => $newItem['newStartDate'],
+                    'endDate' => $newItem['newEndDate'],
+                    'cost' => $cost,
+                ];
+                if ($type === 'venue') {
+                    $reservationData = [
+                        'start_date' => $dates['startDate'],
+                        'end_date' => $dates['endDate']
+                    ];
+                }
                 "App\\Models\\$modelReservation"::create([
-                'event_id' => $eventId,
-                $modelNameId => $newItem['id'],
-                'start_date' => $newItem['newStartDate'],
-                'end_date' => $newItem['newEndDate'],
-                'cost' => $cost,
+                'event_id' => $reservationData['eventId'],
+                $modelNameId => $reservationData[$modelNameId],
+                'start_date' => $reservationData['startDate'],
+                'end_date' => $reservationData['endDate'],
+                'cost' => $reservationData['cost'],
             ]);
 
                 $updateCost += $cost;
@@ -561,7 +580,6 @@ class EventController extends Controller
         $event->save();
         return response()->json(['message' => __('event.updateReservationsSuccess')]);
     }
-
 
 
 }

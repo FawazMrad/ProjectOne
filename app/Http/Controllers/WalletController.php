@@ -36,7 +36,7 @@ class WalletController extends Controller
     }
 
     public function getWalletBalance(Request $request){
-        $wallet=Wallet::where('userId',$request->input('ownerId'))->first();
+        $wallet=Wallet::where('user_id',$request->input('ownerId'))->first();
         $balance=self::getWalletBalanceStatic($wallet);
         return response()->json(['balance'=>$balance],200);
     }
@@ -76,27 +76,6 @@ class WalletController extends Controller
             'message' => $userCanPay['message']
         ];
     }
-
-
-
-// public static function withdraw($ownerId, $quantity)
-//    {
-//        $wallet = Wallet::where('user_id', $ownerId)->first();
-//        $balance = self::getWalletBalanceStatic($wallet);
-//        if ($quantity > $balance) {
-//            return [
-//                'status' => false,
-//                'message' => __('wallet.cannotWithdraw')
-//            ];
-//        }
-//        $newBalance = $balance - $quantity;
-//        $wallet->balance = $newBalance;
-//        $wallet->save();
-//        return [
-//            'status' => true,
-//            'message' => __('wallet.withdrawSuccess')
-//        ];
-//    }
 
     public function deposit(Request $request)
     {
