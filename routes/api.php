@@ -4,6 +4,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\User\AuthController;
 use App\Http\Controllers\User\FriendshipController;
+use App\Http\Controllers\User\PreferenceController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -46,12 +47,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/events/updateEventSoundAndVenueReservations',[EventController::class,'updateEventSoundAndVenueReservations']  ); //(second step for event update)// sound, venue {If you want to delete a previous reservation just give it to me like what you give me to create a new reservation}
     //for friendships
     Route::post('/users/sendFollowRequest',[FriendshipController::class,'sendFollowRequest']  );//for sending follow requests
-    Route::post('/users/followBack',[FriendshipController::class,'followBack']  );//for following back requests
     Route::post('/users/blockUser',[FriendshipController::class,'blockUser']  );//for blocking requests
     Route::post('/users/cancelFollowing',[FriendshipController::class,'cancelFollowing']  );//for canceling following
     Route::get('/users/getFollowers',[FriendshipController::class,'getFollowers']  );//for getting followers
     Route::get('/users/getFollowing',[FriendshipController::class,'getFollowing']  );//for getting Following
     Route::get('/users/getBlocked',[FriendshipController::class,'getBlocked']  );//for getting blocked
 ////////////////////////////
-
+// for preferences
+    Route::get('/users/getPreferences',[PreferenceController::class,'getPreferences']  );//for get the user's preferences
+    Route::post('/users/adjustPreferences',[PreferenceController::class,'adjustPreferences']  );//for adjust the user's preferences one by one
+////////////////
 });

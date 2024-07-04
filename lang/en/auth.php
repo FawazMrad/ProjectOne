@@ -18,6 +18,7 @@ return [
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
     'signUpSuccess'=>'user signed up successfully',
     'signInSuccess'=>'user signed in successfully, WELCOME',
-    'signOutSuccess'=>'user signed out successfully, SEE YOU LATER'
+    'signOutSuccess'=>'user signed out successfully, SEE YOU LATER',
+    'preferencesAdjustSuccessfully'=>'your preferences adjusted successfully',
 
 ];

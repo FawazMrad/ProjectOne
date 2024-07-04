@@ -17,6 +17,7 @@ class LanguageMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         try {
+            $user=$request->user();
             $prefferedLang = $request->header('lang');
             if ($prefferedLang)
                 App::setLocale($prefferedLang);

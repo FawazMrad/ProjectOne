@@ -6,6 +6,7 @@ use App\Helpers\QR_CodeHelper;
 use App\Helpers\WalletHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\WalletController;
+use App\Models\Preference;
 use App\Models\User;
 use Illuminate\Auth\Events\Validated;
 use Illuminate\Http\Request;
@@ -53,7 +54,12 @@ class AuthController extends Controller
             'phone number'=>$user->phone_number,
             'user email'=>$user->email
         ];
-
+       Preference::create([
+           'user_id'=>$user->id,
+           'theme'=>'light',
+           'language'=>'en',
+           'notification_enabled'=>true
+       ]);
        QR_CodeHelper::generateAndSaveQrCode($qrData,'User');
 
        return response()->json(['message'=>__('auth.signUpSuccess'),'user'=>$user,'token'=>$user->createToken("API TOKEN")->plainTextToken],201);

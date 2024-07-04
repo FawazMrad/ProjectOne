@@ -33,26 +33,6 @@ class FriendshipController
         $friendShip->save();
         return response()->json(['message' => __('friendship.requestSentSuccessfully')], 201);
     }
-
-    public function followBack(Request $request)
-    {
-        $senderId = $request->user()->id;
-        $receiverId = $request->input('receiverId');
-        // Check if there is an existing follow request from the receiver to the sender
-        $existingFriendship = Friendship::where('sender_id', $receiverId)
-            ->where('receiver_id', $senderId)
-            ->where('status', 'FOLLOWING')
-            ->first();
-        if (!$existingFriendship) {
-            return response()->json(['error' => __('friendship.noFollowingRequest')], 404);
-        }
-        // Update the status to MUTUAL and set the mutual_at timestamp
-        $existingFriendship->status = 'MUTUAL';
-        $existingFriendship->mutual_at = DateTimeHelper::getCurrentDateTime();
-        $existingFriendship->save();
-        return response()->json(['message' => __('friendship.followBackSuccessful')], 200);
-    }
-
     public function cancelFollowing(Request $request)
     {
         $senderId = $request->user()->id;

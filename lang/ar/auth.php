@@ -18,6 +18,7 @@ return [
     'throttle' => 'تم محاولة تسجيل الدخول مرات عديدة. يرجى المحاولة مرة أخرى بعد :seconds ثانية.',
     'signUpSuccess'=>'تم تسجيل المستخدم بنجاح',
     'signInSuccess'=>'تم تسجيل الدخول بنجاح,اهلا و سهلا',
-    'signOutSuccess'=>'تم تسجيل خروجك بنجاح'
+    'signOutSuccess'=>'تم تسجيل خروجك بنجاح',
+    'preferencesAdjustSuccessfully'=>'تم تحديث تفضيلاتك بنجاح',
 
 ];
