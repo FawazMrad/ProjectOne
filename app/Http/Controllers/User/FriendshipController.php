@@ -105,7 +105,7 @@ class FriendshipController
                 return !is_null($user);
             });
 
-        // Get mutual friends
+
         $mutualFriends = Friendship::with(['receiver' => function ($query) {
             $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number', 'age', 'points', 'rating', 'profile_pic');
         }])
@@ -116,11 +116,9 @@ class FriendshipController
             ->filter(function ($user) {
                 return !is_null($user);
             });
-
         // Combine followers and mutual friends
         $allFollowers = $followers->merge($mutualFriends);
-
-        return response()->json(['Followers' => $allFollowers], 200);
+        return response()->json(['Followers' => $allFollowers,'Followers number'=>$allFollowers->count()], 200);
     }
 
     public function getFollowing(Request $request)
@@ -153,7 +151,7 @@ class FriendshipController
         // Combine followers and mutual friends
         $allFollowing = $following->merge($mutualFriends);
 
-        return response()->json(['Following' => $allFollowing], 200);
+        return response()->json(['Following' => $allFollowing,'Following number'=>$allFollowing->count()], 200);
     }
 
     public function getBlocked(Request $request)
@@ -178,17 +176,8 @@ class FriendshipController
                 $blockedUsersData[] = $user;
             }
         }
-        return response()->json(['BlockedUsers' => $blockedUsersData], 200);
-//        $blockedUsers = Friendship::where('blocker_id', $userId)
-//            ->with(['blocker' => function ($query) {
-//                $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number', 'age', 'points', 'rating', 'profile_pic');
-//            }])
-//            ->get()
-//            ->pluck('blocker')
-//            ->filter(function ($user) {
-//                return !is_null($user);
-//            });
-//                return response()->json(['BlockedUsers' => $blockedUsers], 200);
+        return response()->json(['BlockedUsers' => $blockedUsersData,'BlockedUsersNumber'=>count($blockedUsersData)], 200);
+
 
     }
 

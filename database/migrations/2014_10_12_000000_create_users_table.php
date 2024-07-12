@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('password', 255);
             $table->text('address', 255)->nullable();
             $table->string('phone_number', 20)->nullable();
-            $table->integer('age')->nullable();
+            $table->date('birth_date')->nullable();
             $table->integer('points')->default(0);
             $table->float('rating')->default(0);
             $table->text('profile_pic', 255)->nullable();

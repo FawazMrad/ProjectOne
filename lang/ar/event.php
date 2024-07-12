@@ -14,6 +14,7 @@ return [
     'updateReservationsErrorDate'=>'لم يتم تحديث حجوزات الأحداث بنجاح، ويجب عليك تحديثها قبل تاريخ بدء الحدث بأكثر من أسبوع',
     'invalidItemType'=>'نوع عنصر غير صحيح',
     'updateFurnitureReservationErrorNegativeCost'=>'لا يمكننا تحديث حجوزات الأحداث الخاصة بك لأن التكلفة سلبية',
-
+    'removedFromFavourite'=>'تمت ازالة الحدث من المفضلة بنجاح',
+     'addedToFavourite'=>'تمت اضافة الحدث للمفضلة بنجاح',
 
 ];

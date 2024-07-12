@@ -16,6 +16,7 @@ return [
     'updateReservationsErrorDate'=>'Event reservations not updated successfully you should update them before the event start date in more than one week',
     'invalidItemType'=>'invalidItemType',
     'updateFurnitureReservationErrorNegativeCost'=>'we cannot update your event reservations because the cost is negative',
-
+    'removedFromFavourite'=>'Event was deleted successfully from your favourites',
+'addedToFavourite'=>'Event was added to the favourite successfully',
 
 ];

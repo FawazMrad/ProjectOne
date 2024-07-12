@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('sounds', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['live', 'recorded', 'DJ']);
+            $table->enum('type', ['LIVE', 'RECORDED', 'DJ']);
             $table->string('genre', 50);
             $table->string('artist', 50)->nullable();
             $table->integer('rating')->nullable();

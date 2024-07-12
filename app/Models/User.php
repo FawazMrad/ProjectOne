@@ -25,7 +25,7 @@ class User extends Authenticatable
         'google_id',
         'address',
         'phone_number',
-        'age',
+        'birth_date',
         'points',
         'rating',
         'profile_pic'
@@ -49,7 +49,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-
+  public function getAgeAttribute(){
+      return \Carbon\Carbon::parse($this->birth_date)->age;
+  }
     public function events()
     {
         return $this->hasMany(Event::class);
@@ -72,5 +74,14 @@ class User extends Authenticatable
     public function favourites()
     {
         return $this->hasMany(Favourite::class);
+    }
+    public function following()
+    {
+        return $this->belongsToMany(User::class, 'Friendships', 'sender_id', 'receiver_id');
+    }
+
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'Friendships', 'receiver_id', 'sender_id');
     }
 }

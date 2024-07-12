@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Helpers\DateTimeHelper;
 use App\Helpers\QR_CodeHelper;
 use App\Helpers\WalletHelper;
 use App\Http\Controllers\Controller;
@@ -18,6 +19,7 @@ class AuthController extends Controller
 {
     public function signUp(Request $request)
 {
+    $user=null;
     try {
         $validateUser = Validator::make($request->all(),
             [
@@ -27,7 +29,7 @@ class AuthController extends Controller
                 'password' => 'required',
                 'address' => 'nullable',
                 'phoneNumber' => 'required',
-                'age' => 'required',
+                'birthDate' => 'required|date',
                 'profilePic' => 'nullable',
                 'googleId' => 'nullable|unique:users,google_id'
             ]);
@@ -43,7 +45,7 @@ class AuthController extends Controller
             'password' => Hash::make($request->input('password')),
             'address' => $request->input('address'),
             'phone_number' => $request->input('phoneNumber'),
-            'age' => $request->input('age'),
+            'birth_date' => $request->input('birthDate'),
             'profile_pic' => $request->input('profilePic'),
         ]);
         $user->save();
@@ -66,10 +68,13 @@ class AuthController extends Controller
     }
     catch (\Throwable $th)
     {
+        if($user)
      $user->delete();
      return response()->json(['message'=>$th->getMessage()],500);
     }
 }
+
+
     public function signIn(Request $request){
         try {
             $user = User::where('email', $request->input('email'))->first();
