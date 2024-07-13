@@ -14,6 +14,17 @@ return [
     'updateReservationsErrorDate'=>'لم يتم تحديث حجوزات الأحداث بنجاح، ويجب عليك تحديثها قبل تاريخ بدء الحدث بأكثر من أسبوع',
     'invalidItemType'=>'نوع عنصر غير صحيح',
     'updateFurnitureReservationErrorNegativeCost'=>'لا يمكننا تحديث حجوزات الأحداث الخاصة بك لأن التكلفة سلبية',
-
+    'removedFromFavourite'=>'تمت ازالة الحدث من المفضلة بنجاح',
+    'addedToFavourite'=>'تمت اضافة الحدث للمفضلة بنجاح',
+    'AlreadyInvited'=>'هذا  المستخدم مدعو بالفعل',
+    'confirmInvitation'=>'تم تاكيد الحجز',
+    'errorInConfirmInvitation'=>'لايمكنك تاكيد الحجز',
+    'CannotInviteNow'=>'لايمكنك الدعوة الا قبل الحدث باسبوع',
+    'CancelInvitation'=>'تم رفض الدعوة بنجاح',
+    'purchaseDone'=>'تم شراء التذكرة بنجاح',
+    'CannotPurchaseNow'=>'لايمكنك شراء التذكرة الا قبل الحدث باسبوع',
+    'errorInPurchaseInvitation'=>'لايمكنك  الحجز ',
+    'cancelTicket'=>'تم إلغاء التذكرة بنجاح وستعود أموالك إليك مع ضريبة 2% وانخفض تقييمك الآن بمقدار 0.25 ',
+    'userAlreadyAttend'=>'هذا المستخدم يملك بطاقة مسبقا',
 
 ];

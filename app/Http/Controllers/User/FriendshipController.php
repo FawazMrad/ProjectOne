@@ -33,26 +33,6 @@ class FriendshipController
         $friendShip->save();
         return response()->json(['message' => __('friendship.requestSentSuccessfully')], 201);
     }
-
-    public function followBack(Request $request)
-    {
-        $senderId = $request->user()->id;
-        $receiverId = $request->input('receiverId');
-        // Check if there is an existing follow request from the receiver to the sender
-        $existingFriendship = Friendship::where('sender_id', $receiverId)
-            ->where('receiver_id', $senderId)
-            ->where('status', 'FOLLOWING')
-            ->first();
-        if (!$existingFriendship) {
-            return response()->json(['error' => __('friendship.noFollowingRequest')], 404);
-        }
-        // Update the status to MUTUAL and set the mutual_at timestamp
-        $existingFriendship->status = 'MUTUAL';
-        $existingFriendship->mutual_at = DateTimeHelper::getCurrentDateTime();
-        $existingFriendship->save();
-        return response()->json(['message' => __('friendship.followBackSuccessful')], 200);
-    }
-
     public function cancelFollowing(Request $request)
     {
         $senderId = $request->user()->id;
@@ -125,7 +105,7 @@ class FriendshipController
                 return !is_null($user);
             });
 
-        // Get mutual friends
+
         $mutualFriends = Friendship::with(['receiver' => function ($query) {
             $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number', 'age', 'points', 'rating', 'profile_pic');
         }])
@@ -136,11 +116,9 @@ class FriendshipController
             ->filter(function ($user) {
                 return !is_null($user);
             });
-
         // Combine followers and mutual friends
         $allFollowers = $followers->merge($mutualFriends);
-
-        return response()->json(['Followers' => $allFollowers], 200);
+        return response()->json(['Followers' => $allFollowers,'Followers number'=>$allFollowers->count()], 200);
     }
 
     public function getFollowing(Request $request)
@@ -173,7 +151,7 @@ class FriendshipController
         // Combine followers and mutual friends
         $allFollowing = $following->merge($mutualFriends);
 
-        return response()->json(['Following' => $allFollowing], 200);
+        return response()->json(['Following' => $allFollowing,'Following number'=>$allFollowing->count()], 200);
     }
 
     public function getBlocked(Request $request)
@@ -198,17 +176,8 @@ class FriendshipController
                 $blockedUsersData[] = $user;
             }
         }
-        return response()->json(['BlockedUsers' => $blockedUsersData], 200);
-//        $blockedUsers = Friendship::where('blocker_id', $userId)
-//            ->with(['blocker' => function ($query) {
-//                $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number', 'age', 'points', 'rating', 'profile_pic');
-//            }])
-//            ->get()
-//            ->pluck('blocker')
-//            ->filter(function ($user) {
-//                return !is_null($user);
-//            });
-//                return response()->json(['BlockedUsers' => $blockedUsers], 200);
+        return response()->json(['BlockedUsers' => $blockedUsersData,'BlockedUsersNumber'=>count($blockedUsersData)], 200);
+
 
     }
 

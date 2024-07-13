@@ -23,7 +23,7 @@ return new class extends Migration
             $table->integer('min_age')->nullable();
             $table->boolean('is_paid')->default(false);
             $table->boolean('is_private')->default(false);
-            $table->enum('attendance_type', ['invitation', 'ticket']);
+            $table->enum('attendance_type', ['INVITATION', 'TICKET']);
             $table->decimal('total_cost', 10, 2)->default(0);
             $table->decimal('ticket_price', 10, 2)->default(0);
             $table->decimal('vip_ticket_price', 10, 2)->default(0);

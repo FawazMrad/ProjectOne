@@ -27,10 +27,9 @@ class User extends Authenticatable implements FilamentUser, HasName
         'last_name',
         'email',
         'password',
-        'google_id',
         'address',
         'phone_number',
-        'age',
+        'birth_date',
         'points',
         'rating',
         'profile_pic'
@@ -54,7 +53,9 @@ class User extends Authenticatable implements FilamentUser, HasName
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-
+  public function getAgeAttribute(){
+      return \Carbon\Carbon::parse($this->birth_date)->age;
+  }
     public function events()
     {
         return $this->hasMany(Event::class);
@@ -85,6 +86,7 @@ class User extends Authenticatable implements FilamentUser, HasName
         return $this->hasMany(Favourite::class);
     }
 
+
     public function canAccessPanel(Panel $panel): bool
     {
         return (Auth::user()->hasRole('admin'));
@@ -93,5 +95,16 @@ class User extends Authenticatable implements FilamentUser, HasName
     public function getFilamentName(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    public function following()
+    {
+        return $this->belongsToMany(User::class, 'Friendships', 'sender_id', 'receiver_id');
+    }
+
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'Friendships', 'receiver_id', 'sender_id');
+
     }
 }

@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('favourites', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('user_id')->references('id')->on('users');
             $table->foreignId('event_id')->references('id')->on('events');
-            $table->enum('priority_level', ['low', 'mid', 'high']);
-            $table->primary(['user_id', 'event_id']);
+            $table->enum('priority_level', ['LOW', 'MID', 'HIGH']);
             $table->timestamps();
         });
     }
