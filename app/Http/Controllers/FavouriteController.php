@@ -50,7 +50,8 @@ class FavouriteController
         $eventCreator=$event->user;
 
         $isFollowing = $user->following()->where('receiver_id', $eventCreator->id)->exists();
-        $priorityLevel = $isFollowing ? 'HIGH' : 'MID';
+        $isMutual=$user->followers()->where('sender_id',$eventCreator->id)->exists();
+        $priorityLevel = ($isFollowing||$isMutual) ? 'HIGH' : 'MID';
 
         $favourite = Favourite::create([
             'user_id' => $user->id,

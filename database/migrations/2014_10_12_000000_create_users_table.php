@@ -24,7 +24,6 @@ return new class extends Migration
             $table->float('rating')->default(0);
             $table->text('profile_pic', 255)->nullable();
             $table->text('qr_code', 255)->nullable();
-            $table->string('google_id')->unique()->nullable();
             $table->timestamps();
         });
     }

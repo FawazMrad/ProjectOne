@@ -14,6 +14,7 @@ class VenueReservation extends Model
      'start_date',
      'end_date',
        'booked_seats',
+       'booked_vip_seats',
        'cost'
    ];
    public function venue(){

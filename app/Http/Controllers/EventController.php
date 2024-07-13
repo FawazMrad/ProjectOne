@@ -29,19 +29,18 @@ class EventController extends Controller
 {
     public function storeStep1(Request $request)
     {
+        $userId = $request->user()->id;
         $validatedData = $request->validate([
-            'userId' => 'required|exists:users,id',
             'categoryId' => 'required|exists:categories,id',
             'title' => 'required|string|max:100',
             'description' => 'required|string',
             'minAge' => 'required|integer|min:0',
             'isPaid' => 'required|boolean',
             'isPrivate' => 'required|boolean',
-            'attendanceType' => 'required|in:invitation,ticket',
+            'attendanceType' => 'required|in:INVITATION,TICKET',
             'image' => 'nullable|string',
             'startDate' => 'required|date',
             'endDate' => 'required|date|after_or_equal:startDate',
-
         ]);
 
 
@@ -51,7 +50,7 @@ class EventController extends Controller
         try {
             // Create the event
             $event = Event::create([
-                'user_id' => $validatedData['userId'],
+                'user_id' => $userId,
                 'category_id' => $validatedData['categoryId'],
                 'title' => $validatedData['title'],
                 'description_ar' => $validatedData['description_ar'],
@@ -188,12 +187,17 @@ class EventController extends Controller
                 "total_price" => $drinkCost
             ]);
         }
-
-        $ticketPrices = self::calculateTicketPrices($eventId, $totalCost);
+        if ($event->is_paid) {
+            $ticketPrices = self::calculateTicketPrices($eventId, $totalCost);
+            $event->ticket_price = $ticketPrices['regularTicketPrice'];
+            $event->vip_ticket_price = $ticketPrices['vipTicketPrice'];
+        } else {
+            $event->ticket_price = 0;
+            $event->vip_ticket_price = 0;
+        }
         $event->category_id = $categoryInfo['id'];
         $event->total_cost = $totalCost;
-        $event->ticket_price = $ticketPrices['regularTicketPrice'];
-        $event->vip_ticket_price = $ticketPrices['vipTicketPrice'];
+
         $event->save();
         $ownerId = $event->user_id;
         if ($event) {
@@ -344,7 +348,7 @@ class EventController extends Controller
         $newItems = $request->input('newItems');
         $type = $request->input('itemsType');
         $eventId = $request->input('eventId');
-        $ownerId = $request->input('userId');
+        $ownerId = $request->user()->id;
 
         // Initialize model variables based on item type
         $modelName = '';

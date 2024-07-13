@@ -13,16 +13,16 @@ return new class extends Migration
     {
         Schema::create('attendees', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->references('id')->on('users');
+            $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');;
             $table->foreignId('event_id')->references('id')->on('events');
             $table->enum('status', ['INVITED', 'ATTENDING', 'PURCHASED', 'CANCELLED']);
             $table->boolean('checked_in')->default(false);
             $table->dateTime('purchase_date')->nullable();
             $table->decimal('ticket_price', 10, 2)->default(0);
             $table->enum('ticket_type', ['REGULAR', 'VIP']);
-            $table->string('seat_number', 20)->nullable();
+            $table->string('seat_number', 20)->nullable()->unique();
             $table->decimal('discount', 10, 2)->default(0);
-            $table->string('qr_code', 255);
+            $table->text('qr_code', 255);
             $table->timestamps();
         });
     }

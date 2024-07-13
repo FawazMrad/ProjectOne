@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AttendeeController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\FavouriteController;
 use App\Http\Controllers\ResourceController;
@@ -53,12 +54,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/getFollowers', [FriendshipController::class, 'getFollowers']);//for getting followers
     Route::get('/users/getFollowing', [FriendshipController::class, 'getFollowing']);//for getting Following
     Route::get('/users/getBlocked', [FriendshipController::class, 'getBlocked']);//for getting blocked
-////////////////////////////
 // for preferences
     Route::get('/users/getPreferences', [PreferenceController::class, 'getPreferences']);//for get the user's preferences
     Route::post('/users/adjustPreferences', [PreferenceController::class, 'adjustPreferences']);//for adjust the user's preferences one by one
-////////////////
+
 /// for the favourites
     Route::post('/users/changeEventFavouriteState', [FavouriteController::class, 'addOrRemoveFavourite']);//for add the event to the favourite list
     Route::post('/users/getFavouriteEvents', [FavouriteController::class, 'getUserFavourites']);//for getting the user's fav events
+/// for the attendee
+    Route::post('/attendees/sendInvitation', [AttendeeController::class, 'sendInvitation']);//for sendInvitation
+    Route::post('/attendees/confirmInvitation', [AttendeeController::class, 'confirmInvitation']);//for confirm the invitation
+    Route::post('/attendees/cancelInvitation', [AttendeeController::class, 'cancelInvitation']);//for cancel the invitation
+    Route::post('/attendees/purchaseTicket', [AttendeeController::class, 'purchaseTicket']);//for purchase Tickets
+    Route::post('/attendees/cancelTicket', [AttendeeController::class, 'cancelTicket']);//for cancel Tickets
+
 });

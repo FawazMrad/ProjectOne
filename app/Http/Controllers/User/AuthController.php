@@ -30,8 +30,7 @@ class AuthController extends Controller
                 'address' => 'nullable',
                 'phoneNumber' => 'required',
                 'birthDate' => 'required|date',
-                'profilePic' => 'nullable',
-                'googleId' => 'nullable|unique:users,google_id'
+                'profilePic' => 'nullable'
             ]);
         if ($validateUser->fails()) {
             return response()->json([
@@ -41,7 +40,6 @@ class AuthController extends Controller
             'first_name' => $request->input('firstName'),
             'last_name' => $request->input('lastName'),
             'email' => $request->input('email'),
-            'google_id' => $request->input('googleId'),
             'password' => Hash::make($request->input('password')),
             'address' => $request->input('address'),
             'phone_number' => $request->input('phoneNumber'),
@@ -97,7 +95,6 @@ class AuthController extends Controller
     {
         try {
             $user = User::where('email', $request->input('email'))
-                ->orWhere('google_id', $request->input('googleId'))
                 ->first();
             return response()->json([
                 'message' => __('auth.signInSuccess'),

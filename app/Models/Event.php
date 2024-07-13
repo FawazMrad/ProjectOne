@@ -54,8 +54,8 @@ class Event extends Model
     public function soundReservations(){
         return $this->hasMany(SoundReservation::class);
     }
-    public function venueReservations(){
-        return $this->hasMany(VenueReservation::class);
+    public function venueReservation(){
+        return $this->hasOne(VenueReservation::class);
     }
     public function furnitureReservations(){
         return $this->hasMany(FurnitureReservation::class);
