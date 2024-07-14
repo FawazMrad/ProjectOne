@@ -20,7 +20,7 @@ return new class extends Migration
             $table->dateTime('purchase_date')->nullable();
             $table->decimal('ticket_price', 10, 2)->default(0);
             $table->enum('ticket_type', ['REGULAR', 'VIP']);
-            $table->string('seat_number', 20)->nullable()->unique();
+            $table->string('seat_number', 20)->nullable();
             $table->decimal('discount', 10, 2)->default(0);
             $table->text('qr_code', 255);
             $table->timestamps();

@@ -8,6 +8,7 @@ use App\Helpers\EventHelper;
 use App\Helpers\QR_CodeHelper;
 use App\Models\Attendee;
 use App\Models\Event;
+use App\Models\User;
 use App\Models\VenueReservation;
 use Carbon\Carbon;
 use http\Env\Response;
@@ -112,6 +113,7 @@ class AttendeeController
         $isUserAttend=Attendee::where('user_id',$userId)
             ->where('event_id',$eventId)->first();
         if($isUserAttend)
+        if($isUserAttend->status!=='CANCELLED')
             return response()->json(['message'=>__('event.userAlreadyAttend')],400);
         $dates = EventHelper::getEventDates($eventId);
         if ($dates['dateDifference']->days >= 7) {
@@ -176,6 +178,10 @@ class AttendeeController
         $userId = $user->id;
         $attendeeId = $request->input('attendeeId');
         $attendee = Attendee::find($attendeeId);
+        if($attendee->status==='CANCELLED')
+            return \response()->json(['message'=>__('event.AlreadyCancelled')],400);
+        if($attendee->status!='Purchased')
+            return \response()->json(['message'=>__('event.AlreadyCancelled')],400);
         $event = $attendee->event()->first();
         if ($event->is_paid) {
             WalletController::refund($userId, $event->user_id, $attendee->ticket_price);
@@ -191,5 +197,22 @@ class AttendeeController
         }
         $user->save();
         return response()->json(['message' => __('event.cancelTicket')], 201);
+    }
+    public function checkIn(Request $request){
+        $userId=$request->input('userId');
+        $user=User::find($userId);
+        $attendeeId=$request->input('attendeeId');
+        $attendee=Attendee::find($attendeeId);
+        if($attendee->status==='ATTENDING')
+            return \response()->json(['message'=>__('event.userAlreadyCheckedIn')],400);
+        if($attendee->status!='PURCHASED')
+            return \response()->json(['message'=>__('event.checkedInNotPurchased')],400);
+        $attendee->checked_in=true;
+        $attendee->status='ATTENDING';
+        $attendee->save();
+        EventHelper::changeUserRating($user,0.1);
+        return \response()->json(['message'=>__('event.checkedIn')],200);
+
+
     }
 }

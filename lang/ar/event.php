@@ -1,12 +1,12 @@
 <?php
 return [
     'eventNotFound'=>'لم يتم العثور على الحدث',
-    'completeStepOne'=>'تمت الخطوة الاولى بنجاح',
+    'completeStepOne'=>'تمت الخطوة الاولى بنجاح و تم زيادة تقييمك ب 0.2',
     'errorIncompleteStepOne'=>'لم تتم الخطوة الاولى بنجاح',
     'IdNotFoundOrDates' => 'معرف حدث غير صالح أو لم يتم العثور على تواريخ الحدث',
     'completeStepTow'=>'تمت الخطوة الثانية بنجاح',
     'errorIncompleteStepTow'=>'لم تتم الخطوة الثانية بنجاح',
-    'deleteSuccess'=>'تم حذف الحدث بنجاح',
+    'deleteSuccess'=>' تم حذف الحدث بنجاح و اصبح تقييمك الان اقل بمقدار 0.2',
     'deleteErrorBeforeEvent'=>'لا يمكننا حذف الحدث الخاص بك لأنك تريد حذفه قبل أقل من أسبوع من تاريخ بدايته',
     'priceAdjustSuccess'=>'تم تعديل الاسعار بنجاح!',
     'adjustPricesErrorBeforeEvent'=>'لا يمكننا تعديل اسعار الحدث الخاص بك لأنك تريد  قبل أقل من أسبوع من تاريخ بدايته',
@@ -26,5 +26,11 @@ return [
     'errorInPurchaseInvitation'=>'لايمكنك  الحجز ',
     'cancelTicket'=>'تم إلغاء التذكرة بنجاح وستعود أموالك إليك مع ضريبة 2% وانخفض تقييمك الآن بمقدار 0.25 ',
     'userAlreadyAttend'=>'هذا المستخدم يملك بطاقة مسبقا',
+    'AlreadyCancelled'=>'هذا المستخدم الغى حجز البطاقة مسبقا',
+    'checkedIn'=>'تم اثبات الجضور  و تم زيادة تقييمك ب 0.1',
+    'checkedInNotPurchased'=>'هذا المستخدم لايملك تذكرة',
+    'userAlreadyCheckedIn'=>'هذا المستخدم تم التاكد منه بالفعل',
+    'noSuchEvents'=>'لا يوجد احداث مماثلة حتى الان',
+    'noPopularEvents'=>'ليس هناك احداث مميزة حاليا',
 
 ];

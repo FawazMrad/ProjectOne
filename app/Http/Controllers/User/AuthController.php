@@ -13,6 +13,7 @@ use Illuminate\Auth\Events\Validated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Ramsey\Uuid\Exception\TimeSourceException;
 use function PHPUnit\Framework\throwException;
 
 class AuthController extends Controller
@@ -71,8 +72,6 @@ class AuthController extends Controller
      return response()->json(['message'=>$th->getMessage()],500);
     }
 }
-
-
     public function signIn(Request $request){
         try {
             $user = User::where('email', $request->input('email'))->first();
@@ -116,4 +115,6 @@ class AuthController extends Controller
         return response()->json(['message' => $th->getMessage()], 500);
     }
 }
+
+
 }

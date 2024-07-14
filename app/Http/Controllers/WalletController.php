@@ -13,7 +13,7 @@ class WalletController extends Controller
         $newBalance = $wallet->balance - $quantity;
         $wallet->balance = $newBalance;
         $wallet->save();
-        self::depositStatic(1,$userId,$quantity);
+        self::depositStatic(0.02,$userId,$quantity);
         return ['message' => __('wallet.giftOk'),'status' => true];
     }
     public function gift(Request $request)
@@ -99,7 +99,8 @@ class WalletController extends Controller
 
     public function getWalletBalance(Request $request)
     {
-        $wallet = Wallet::where('user_id', $request->input('ownerId'))->first();
+        $user=$request->user();
+        $wallet = $user->wallet()->first();
         $balance = self::getWalletBalanceStatic($wallet);
         return response()->json(['balance' => $balance], 200);
     }

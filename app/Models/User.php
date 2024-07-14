@@ -26,6 +26,8 @@ class User extends Authenticatable
         'phone_number',
         'birth_date',
         'points',
+        'followers',
+        'following',
         'rating',
         'profile_pic'
     ];
