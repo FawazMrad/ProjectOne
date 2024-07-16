@@ -9,29 +9,34 @@ class TranslationHelper
 {
     public static function descriptionAndTranslatedDescription($data)
     {
-        $description = $data['description'];
+        try {
+            $description = $data['description'];
+          $tr = new GoogleTranslate();
 
-        // Initialize GoogleTranslate
-        $tr = new GoogleTranslate();
 
-        // Translate to English
-        $tr->setSource('auto'); // Automatically detect the source language
-        $tr->setTarget('en');
-        $description_en = $tr->translate($description);
+            $tr->setSource('auto');
+            $tr->setTarget('en');
+            $description_en = $tr->translate($description);
 
-        // Translate to Arabic
-        $tr->setTarget('ar');
-        $description_ar = $tr->translate($description);
 
-        // Add translated descriptions to validatedData
-        $data['description_en'] = $description_en;
-        $data['description_ar'] = $description_ar;
+            $tr->setTarget('ar');
+            $description_ar = $tr->translate($description);
 
-        // Remove the original description
-        unset($data['description']);
+            $data['description_en'] = $description_en;
+            $data['description_ar'] = $description_ar;
+
+
+            unset($data['description']);
+
+            return $data;
+        } catch (\Exception $e) {
+            $data['description_en'] = 'Translation failed: ' . $e->getMessage();
+            $data['description_ar'] = 'Translation failed: ' . $e->getMessage();
+        }
 
         return $data;
-    }
+        }
+
 
 
 }

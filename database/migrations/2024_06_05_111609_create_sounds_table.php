@@ -16,7 +16,7 @@ return new class extends Migration
             $table->enum('type', ['LIVE', 'RECORDED', 'DJ']);
             $table->string('genre', 50);
             $table->string('artist', 50)->nullable();
-            $table->integer('rating')->nullable();
+            $table->float('rating')->default(0);
             $table->string('image', 255)->nullable();
             $table->decimal('cost', 10, 2);
             $table->timestamps();

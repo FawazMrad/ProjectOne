@@ -106,7 +106,6 @@ class FriendshipController
         self::changeNumbers($targetId,-1,'following');
         return response()->json(['message' => __('friendship.blockedSuccessfully')], 200);
     }
-
     public function getFollowers(Request $request)
     {
         $userId = $request->user()->id;
@@ -137,7 +136,6 @@ class FriendshipController
         $allFollowers = $followers->merge($mutualFriends);
         return response()->json(['Followers' => $allFollowers,'Followers number'=>$allFollowers->count()], 200);
     }
-
     public function getFollowing(Request $request)
     {
         $userId = $request->user()->id;
@@ -170,7 +168,6 @@ class FriendshipController
 
         return response()->json(['Following' => $allFollowing,'Following number'=>$allFollowing->count()], 200);
     }
-
     public function getBlocked(Request $request)
     {
         $userId = $request->user()->id;

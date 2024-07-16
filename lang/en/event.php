@@ -11,7 +11,7 @@ return [
     'deleteSuccess' => 'Event was deleted successfully ,and your rating now decreased by 0.2',
     'deleteErrorBeforeEvent' => 'We cannot delete your event cause you want to delete before less than a week from its start date',
     'priceAdjustSuccess' => 'The prices of the event was adjusted successfully!',
-    'adjustPricesErrorBeforeEvent' => 'Wc cannot adjust the prices for your event cause you want that before less than a week from its start date',
+    'adjustPricesErrorBeforeEvent' => 'We cannot adjust the prices for your event cause you want that before less than a week from its start date',
     'updateReservationsSuccess' => 'Event reservations updated successfully',
     'updateReservationsErrorDate' => 'Event reservations not updated successfully you should update them before the event start date in more than one week',
     'invalidItemType' => 'invalidItemType',
@@ -34,4 +34,6 @@ return [
     'userAlreadyCheckedIn'=>'This user already was check in',
     'noSuchEvents'=>'There are no such events right now',
     'noPopularEvents'=>'There are no most popular events till now',
+    'rateDone'=>'Rate was sent successfully',
+    'alreadyRated'=>'This user already rate this event',
 ];

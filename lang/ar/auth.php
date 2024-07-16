@@ -21,5 +21,7 @@ return [
     'signOutSuccess'=>'تم تسجيل خروجك بنجاح',
     'preferencesAdjustSuccessfully'=>'تم تحديث تفضيلاتك بنجاح',
     'userNotFound'=>'لايمكن ايجاد هذا المستخدم',
+    'resetPassword'=>'تم تحديث كلمة المرور بنجاح',
+
 
 ];

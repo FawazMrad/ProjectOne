@@ -8,6 +8,7 @@ use App\Models\VenueReservation;
 use Carbon\Carbon;
 use DateTime;
 
+
 class EventHelper
 {
     public static function getEventDates($eventId)
@@ -115,4 +116,49 @@ class EventHelper
         $user->rating = $newRating;
         $user->save();
     }
+    public static function getCreatedEventsCalender($user){
+        $days=DateTimeHelper::getFirstDayOfCurrentMonthAndLastDayOfAfterTowMonths();
+        $firstDayOfCurrentMonth=$days['firstDayOfCurrentMonth'];
+            $lastDayOfTwoMonthsAhead=$days['lastDayOfTwoMonthsAhead'];
+        $userCreatedEvents = $user->events()
+            ->select('id', 'user_id', 'category_id', 'title', 'start_date', 'min_age', 'is_paid', 'is_private','image')
+            ->whereBetween('start_date', [$firstDayOfCurrentMonth, $lastDayOfTwoMonthsAhead])
+            ->get();
+        $userCreatedEvents = $userCreatedEvents->map(function ($event) {
+            $eventArray = $event->toArray();
+            $eventArray['state'] = 'CREATED';
+            return $eventArray;
+        });
+        return $userCreatedEvents;
+    }
+
+        public static function getInvitedOrPurchasedEventsCalender($user,$status)
+        {
+            $days=DateTimeHelper::getFirstDayOfCurrentMonthAndLastDayOfAfterTowMonths();
+            $firstDayOfCurrentMonth=$days['firstDayOfCurrentMonth'];
+            $lastDayOfTwoMonthsAhead=$days['lastDayOfTwoMonthsAhead'];
+
+           $statusUpper =($status==='invited') ?'INVITED' :'PURCHASED';
+
+            $events = $user->attendees()
+                ->where('status', $statusUpper)
+                ->whereHas('event', function ($query) use ($firstDayOfCurrentMonth, $lastDayOfTwoMonthsAhead) {
+                    $query->whereBetween('start_date', [$firstDayOfCurrentMonth, $lastDayOfTwoMonthsAhead]);
+                })
+                ->with(['event' => function ($query) {
+                    $query->select('id', 'user_id', 'category_id', 'title', 'start_date', 'min_age', 'is_paid', 'is_private','image');
+                }])
+                ->get()
+                ->pluck('event'); // Extract only the event objects
+
+            // Map events to add state attribute
+            $events = $events->map(function ($event) use ($statusUpper) {
+                $eventArray = $event->toArray();
+                $eventArray['state'] = $statusUpper;
+                return $eventArray;
+            });
+
+            return $events;
+    }
+
 }

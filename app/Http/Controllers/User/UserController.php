@@ -8,6 +8,7 @@ use App\Models\User;
 use http\Env\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
 class UserController
@@ -36,12 +37,14 @@ class UserController
             return response()->json(['AttendedEvents' => $attendedEvents], 200);
         return response()->json(['message' => __('event.noSuchEvents')], 404);
     }
-    public function eventsHistory(Request $request)
+    public function eventsCreatedHistory(Request $request)
     {
         $user = $request->user();
         $currentDateTime = DateTimeHelper::getCurrentDateTime();
+        $endDateTime = clone $currentDateTime;
+        $endDateTime->modify('+6 days');
         $events = $user->events()
-            ->where('start_date', '<', $currentDateTime)
+            ->where('start_date', '<', $endDateTime)
             ->get();
 
         if ($events->isNotEmpty()) {
@@ -50,12 +53,14 @@ class UserController
 
         return response()->json(['message' => __('event.noSuchEvents')], 404);
     }
-    public function getUpComingEvents(Request $request)
+    public function getCreatedUpdatableEvents(Request $request)
     {
         $user = $request->user();
         $currentDateTime = DateTimeHelper::getCurrentDateTime();
+        $endDateTime = clone $currentDateTime;
+        $endDateTime->modify('+6 days');
         $upComingEvents = $user->events()
-            ->where('start_date', '>', $currentDateTime)->get();
+            ->where('start_date', '>=', $endDateTime)->get();
         if ($upComingEvents->isNotEmpty()) {
             return response()->json(['upComingEvents' => $upComingEvents], 200);
         }
@@ -130,4 +135,17 @@ class UserController
         QR_CodeHelper::generateAndSaveQrCode($qrData,'User');
         return response()->json(['user' => $user], 200);
     }
+    public function resetPassword(Request $request){
+        $user=$request->user();
+        $oldPassword=$request->input('oldPassword');
+        $newPassword=$request->input('newPassword');
+        $givenCurrentPassword=Hash::check($oldPassword,$user->password);
+        if($givenCurrentPassword){
+            $user->password=Hash::make($newPassword);
+            $user->save();
+            return \response()->json(['message'=>__('auth.resetPassword')],200);
+        }
+        return \response()->json(['message'=>__('auth.password')],400);
+    }
+
 }

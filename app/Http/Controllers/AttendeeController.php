@@ -24,7 +24,7 @@ class AttendeeController
         $event = Event::find($eventId);
         $dates = EventHelper::getEventDates($eventId);
 
-        if ($dates['dateDifference']->days >= 7) {
+        if ($dates['dateDifference']->days <=1) {
             return response()->json(['message' => __('event.CannotInviteNow')], 400);
         }
 
@@ -116,7 +116,7 @@ class AttendeeController
         if($isUserAttend->status!=='CANCELLED')
             return response()->json(['message'=>__('event.userAlreadyAttend')],400);
         $dates = EventHelper::getEventDates($eventId);
-        if ($dates['dateDifference']->days >= 7) {
+        if ($dates['dateDifference']->days > 5) {
             return response()->json(['message' => __('event.CannotPurchaseNow')], 400);
         }
         $event = Event::find($eventId);

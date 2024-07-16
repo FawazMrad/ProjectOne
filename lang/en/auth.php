@@ -21,5 +21,6 @@ return [
     'signOutSuccess'=>'user signed out successfully, SEE YOU LATER',
     'preferencesAdjustSuccessfully'=>'your preferences adjusted successfully',
     'userNotFound'=>'We cannot find this user',
+    'resetPassword'=>'Your password was reset successfully',
 
 ];

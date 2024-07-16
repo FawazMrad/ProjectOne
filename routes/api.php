@@ -3,6 +3,7 @@
 use App\Http\Controllers\AttendeeController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\FavouriteController;
+use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\User\AuthController;
 use App\Http\Controllers\User\FriendshipController;
@@ -83,9 +84,13 @@ Route::middleware('auth:sanctum')->group(function () {
 //for profile
     Route::get('/users/getProfile', [UserController::class, 'getProfile']);//for getProfile
     Route::get('/users/getAttendedEvents', [UserController::class, 'getAttendedEvents']);//for getAttended Events
-    Route::get('/users/eventsHistory', [UserController::class, 'eventsHistory']);//for events History
-    Route::get('/users/getUpComingEvents', [UserController::class, 'getUpComingEvents']);//for getUpComingEvents
+    Route::get('/users/eventsCreatedHistory', [UserController::class, 'eventsCreatedHistory']);//for eventsCreatedHistory
+    Route::get('/users/getCreatedUpdatableEvents', [UserController::class, 'getCreatedUpdatableEvents']);//for getCreatedUpdatableEvents
     Route::get('/users/searchUsers', [UserController::class, 'searchUsers']);//for searchUsers
     Route::post('/users/editProfile', [UserController::class, 'editProfile']);//for editProfile
-
+    Route::post('/users/resetPassword', [UserController::class, 'resetPassword']);//for reset Password
+//for calender
+    Route::get('/events/calender', [EventController::class, 'calender']);//for calender
+//for rating
+    Route::post('/events/rateEvent', [RatingController::class, 'rateEvent']); //for rate events
 });

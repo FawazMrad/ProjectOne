@@ -260,7 +260,7 @@ class EventController extends Controller
                 // Delete the event if it was created less than 2 hours ago
                 WalletController::depositStatic(0.02, $ownerId, $event->total_cost);
                 $event->delete();
-                EventHelper::changeUserRating($user, -0.2);
+                EventHelper::changeUserRating($user, -0.3);
                 return response()->json(['message' => __('event.deleteSuccess')], 200);
             }
             if ($dates['currentDateTime'] < $dates['startDate'] && $dates['dateDifference']->days <= 7) {
@@ -268,7 +268,7 @@ class EventController extends Controller
             } else {
                 WalletController::depositStatic(0.02, $ownerId, $event->total_cost);
                 $event->delete();
-                EventHelper::changeUserRating($user, -0.2);
+                EventHelper::changeUserRating($user, -0.3);
                 return response()->json(['message' => __('event.deleteSuccess')], 200);
             }
         } else if ($desire === 'cancel') { // for canceling the event creation
@@ -292,13 +292,13 @@ class EventController extends Controller
 
     public function adjustPrices(Request $request)
     {
-
         $newRegularTicketPrice = $request->input('newRegularTicketPrice');
         $newVipTicketPrice = $request->input('newVipTicketPrice');
         $eventId = $request->input('eventId');
         $event = Event::find($eventId);
         $dates = EventHelper::getEventDates($eventId);
-        if ($dates['currentDateTime'] < $dates['startDate'] && $dates['dateDifference']->days <= 7) {
+        if ($dates['currentDateTime'] < $dates['startDate'] && $dates['dateDifference']->days <= 5) {
+
             return response()->json(['message' => __('event.adjustPricesErrorBeforeEvent')], 400);
         } else {
             if ($event->ticket_price > 0 && $event->vip_ticket_price > 0) {
@@ -403,7 +403,7 @@ class EventController extends Controller
         $dates = EventHelper::getEventDates($eventId);
         $updateCost = 0;
         // Check if the event is within 7 days
-        if ($dates['dateDifference']->days <= 7) {
+        if ($dates['dateDifference']->days <= 5) {
             return response()->json(['message' => __('event.updateReservationsErrorDate')], 400);
         }
         // Step 1: Create a dictionary to map objects_id to the reservation
@@ -529,7 +529,7 @@ class EventController extends Controller
         $dates = EventHelper::getEventDates($eventId);
         $updateCost = 0;
         // Check if the event is within 7 days
-        if ($dates['dateDifference']->days <= 7) {
+        if ($dates['dateDifference']->days <= 5) {
             return response()->json(['message' => __('event.updateReservationsErrorDate')], 400);
         }
         // Step 1: Create a dictionary to map objects_id to the reservation
@@ -602,8 +602,6 @@ class EventController extends Controller
     public function searchEvents(Request $request)
     {
         $query = Event::query();
-
-        // Filter for public events only
         $query->where('is_private', false);
 
         if ($request->has('categoryId')) {
@@ -623,7 +621,7 @@ class EventController extends Controller
         if ($request->has('minAge')) {
             $query->where('min_age', '>=', $request->input('minAge'));
         }
-        if($request->has('isFree')){
+        if ($request->has('isFree')) {
             $query->where('is_paid', false);
         }
 
@@ -632,7 +630,8 @@ class EventController extends Controller
             $vipPriceRange = explode('-', $request->input('vipPriceRange'));
             if (count($priceRange) == 2) {
                 $query->whereBetween('ticket_price', [(float)$priceRange[0], (float)$priceRange[1]]);
-            } if (count($vipPriceRange) == 2) {
+            }
+            if (count($vipPriceRange) == 2) {
                 $query->whereBetween('vip_ticket_price', [(float)$vipPriceRange[0], (float)$vipPriceRange[1]]);
             }
         }
@@ -648,7 +647,7 @@ class EventController extends Controller
 
     public function mostPopularEvents()
     {
-        $events = Event::select('events.*','users.rating as creator_rating')
+        $events = Event::select('events.*', 'users.rating as creator_rating')
             ->join('users', 'events.user_id', '=', 'users.id')
             ->where('is_private', false)
             ->orderBy('users.rating', 'desc')
@@ -660,11 +659,32 @@ class EventController extends Controller
 
         return response()->json(['events' => __('event.noPopularEvents')], 404);
     }
-    public function getEvent(Request $request){
-        $eventId=$request->input('eventId');
-        $event=Event::find($eventId);
-        if($event)
-        return response()->json(['event'=>$event],200);
-        return  response()->json(['message'=>__('event.eventNotFound')],404);
+
+    public function getEvent(Request $request)
+    {
+        $eventId = $request->input('eventId');
+        $event = Event::find($eventId);
+        if ($event)
+            return response()->json(['event' => $event], 200);
+        return response()->json(['message' => __('event.eventNotFound')], 404);
+    }
+
+    public function calender(Request $request)
+    {
+        $user=$request->user();
+        $createdEvents = EventHelper::getCreatedEventsCalender($user);
+        $invitedEvents = EventHelper::getInvitedOrPurchasedEventsCalender($user, 'invited');
+        $purchasedEvents = EventHelper::getInvitedOrPurchasedEventsCalender($user, 'purchased');
+
+        $createdEventsCollection = collect($createdEvents);
+        $invitedEventsCollection = collect($invitedEvents);
+        $purchasedEventsCollection = collect($purchasedEvents);
+
+        $allEvents = $createdEventsCollection->merge($invitedEventsCollection)->merge($purchasedEventsCollection);
+
+        $uniqueEvents = $allEvents->unique('id');
+        if($uniqueEvents->isNotEmpty())
+            return response()->json(['Events'=>$uniqueEvents],200);
+        return response()->json(['Events'=>__('event.noSuchEvents')],404);
     }
 }
