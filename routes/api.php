@@ -5,6 +5,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\FavouriteController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ResourceController;
+use App\Http\Controllers\StationController;
 use App\Http\Controllers\User\AuthController;
 use App\Http\Controllers\User\FriendshipController;
 use App\Http\Controllers\User\PreferenceController;
@@ -37,7 +38,11 @@ Route::post('/events/searchEvents', [EventController::class, 'searchEvents']); /
 Route::get('/events/mostPopularEvents', [EventController::class, 'mostPopularEvents']); //getThe most popular events
 Route::post('/events/getEvent', [EventController::class, 'getEvent']); //getThe desired event
 Route::post('/users/getUser', [UserController::class, 'getUser']); //getThe desired user
-
+//station
+Route::post('/stations/deposit', [StationController::class, 'stationDeposit']);
+Route::post('/stations/signIn', [StationController::class, 'stationSignIn']);
+Route::post('/stations/stationSignup', [StationController::class, 'stationSignup']);
+Route::post('/stations/monthlyReport', [StationController::class, 'monthlyReport']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -56,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/wallet/deposit', [WalletController::class, 'deposit']); //add money to the user's wallet
     Route::get('/wallet/balance', [WalletController::class, 'getWalletBalance']); // user's wallet balance
     Route::post('/wallet/gift', [WalletController::class, 'gift']); //send money gifts
+    Route::get('/wallet/recentTransactions', [WalletController::class, 'recentTransactions']); //recentTransactions
    //update event
     Route::post('/events/getEventReservations', [EventController::class, 'getEventReservations']); //(first step for event update)get event's reservations
     Route::post('/events/updateEventQuantitiesReservations', [EventController::class, 'updateEventQuantitiesReservations']); //(second step for event update)// furniture, decoration item , security ,food ,drink {for food and drink I want a servingDate}

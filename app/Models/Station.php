@@ -5,17 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Wallet extends Model
+class Station extends Model
 {
     use HasFactory;
     protected $fillable=[
-      'user_id',
-      'balance'
+        'governorate',
+        'name',
+        'location',
+        'manager_name',
+        'manager_email',
+        'manager_id_picture',
+        'balance'
     ];
-    public function user(){
-        return $this->belongsTo(User::class);
-    }
     public function fillHistories(){
         return $this->hasMany(FillHistory::class);
     }
+
 }

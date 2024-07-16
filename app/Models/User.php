@@ -85,4 +85,13 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(User::class, 'Friendships', 'receiver_id', 'sender_id');
     }
+    public function sentGifts()
+    {
+        return $this->hasMany(GiftHistory::class, 'sender_id');
+    }
+
+    public function receivedGifts()
+    {
+        return $this->hasMany(GiftHistory::class, 'receiver_id');
+    }
 }
