@@ -53,9 +53,6 @@ class ResourceController extends Controller
         return response()->json(['Available' . $resource . 's' => $availableResources], 200);
     }
 
-
-
-
     public function getAvailableResourcesWithQuantity(Request $request) // furniture, decorationItem, security
     {
         $resourceName = $request->input('resourceName');
@@ -167,7 +164,6 @@ class ResourceController extends Controller
 
         return response()->json([$type . ' available' => $availableItems], 200);
     }
-
     public function getCategories(Request $request)//EventCats or DecorationCats
     {//Categories
         $type = $request->input('type');
@@ -189,6 +185,4 @@ class ResourceController extends Controller
             return response()->json(['Message' => __('resources.emptyCategories')], 404);
         return response()->json(['Categories' => $categories], 200);
     }
-
-
 }

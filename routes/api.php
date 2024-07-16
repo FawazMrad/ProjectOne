@@ -3,10 +3,13 @@
 use App\Http\Controllers\AttendeeController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\FavouriteController;
+use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ResourceController;
+use App\Http\Controllers\StationController;
 use App\Http\Controllers\User\AuthController;
 use App\Http\Controllers\User\FriendshipController;
 use App\Http\Controllers\User\PreferenceController;
+use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +33,18 @@ Route::post('/users/signUp', [AuthController::class, 'signUp']);//for user signu
 Route::post('/users/signIn', [AuthController::class, 'signIn']);//for user traditional signIn
 Route::post('/users/googleSignIn', [AuthController::class, 'googleSignIn']);//for user google signIn
 
+Route::post('/events/getEventsByCategory', [EventController::class, 'getEventsByCategory']); //getThe events by their categories
+Route::post('/events/searchEvents', [EventController::class, 'searchEvents']); //getThe events by : categoryId,startDate&endDate,location,minAge,priceRange(10-20)
+Route::get('/events/mostPopularEvents', [EventController::class, 'mostPopularEvents']); //getThe most popular events
+Route::post('/events/getEvent', [EventController::class, 'getEvent']); //getThe desired event
+Route::post('/users/getUser', [UserController::class, 'getUser']); //getThe desired user
+//station
+Route::post('/stations/deposit', [StationController::class, 'stationDeposit']);
+Route::post('/stations/signIn', [StationController::class, 'stationSignIn']);
+Route::post('/stations/stationSignup', [StationController::class, 'stationSignup']);
+Route::post('/stations/monthlyReport', [StationController::class, 'monthlyReport']);
+
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/events/step1', [EventController::class, 'storeStep1']);//FirstStepOfEVENT-Creation
     Route::post('/users/signOut', [AuthController::class, 'signOut']);//for user sign out
@@ -41,9 +56,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/resources/categories', [ResourceController::class, 'getCategories']); //get the event categories and decoration items categories
     Route::post('/events/getPrices', [EventController::class, 'getPrices']); //get the event's tickets prices
     Route::post('/events/adjustPrices', [EventController::class, 'adjustPrices']); //adjust the event's tickets prices
+
+    //for wallet
     Route::post('/wallet/deposit', [WalletController::class, 'deposit']); //add money to the user's wallet
-    Route::post('/wallet/balance', [WalletController::class, 'getWalletBalance']); // user's wallet balance
+    Route::get('/wallet/balance', [WalletController::class, 'getWalletBalance']); // user's wallet balance
     Route::post('/wallet/gift', [WalletController::class, 'gift']); //send money gifts
+    Route::get('/wallet/recentTransactions', [WalletController::class, 'recentTransactions']); //recentTransactions
+   //update event
     Route::post('/events/getEventReservations', [EventController::class, 'getEventReservations']); //(first step for event update)get event's reservations
     Route::post('/events/updateEventQuantitiesReservations', [EventController::class, 'updateEventQuantitiesReservations']); //(second step for event update)// furniture, decoration item , security ,food ,drink {for food and drink I want a servingDate}
     Route::post('/events/updateEventSoundAndVenueReservations', [EventController::class, 'updateEventSoundAndVenueReservations']); //(second step for event update)// sound, venue {If you want to delete a previous reservation just give it to me like what you give me to create a new reservation}
@@ -67,5 +86,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/attendees/cancelInvitation', [AttendeeController::class, 'cancelInvitation']);//for cancel the invitation
     Route::post('/attendees/purchaseTicket', [AttendeeController::class, 'purchaseTicket']);//for purchase Tickets
     Route::post('/attendees/cancelTicket', [AttendeeController::class, 'cancelTicket']);//for cancel Tickets
-
+    Route::post('/attendees/checkIn', [AttendeeController::class, 'checkIn']);//for check in Tickets
+//for profile
+    Route::get('/users/getProfile', [UserController::class, 'getProfile']);//for getProfile
+    Route::get('/users/getAttendedEvents', [UserController::class, 'getAttendedEvents']);//for getAttended Events
+    Route::get('/users/eventsCreatedHistory', [UserController::class, 'eventsCreatedHistory']);//for eventsCreatedHistory
+    Route::get('/users/getCreatedUpdatableEvents', [UserController::class, 'getCreatedUpdatableEvents']);//for getCreatedUpdatableEvents
+    Route::get('/users/searchUsers', [UserController::class, 'searchUsers']);//for searchUsers
+    Route::post('/users/editProfile', [UserController::class, 'editProfile']);//for editProfile
+    Route::post('/users/resetPassword', [UserController::class, 'resetPassword']);//for reset Password
+//for calender
+    Route::get('/events/calender', [EventController::class, 'calender']);//for calender
+//for rating
+    Route::post('/events/rateEvent', [RatingController::class, 'rateEvent']); //for rate events
 });

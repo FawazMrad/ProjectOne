@@ -20,5 +20,8 @@ return [
     'signInSuccess'=>'تم تسجيل الدخول بنجاح,اهلا و سهلا',
     'signOutSuccess'=>'تم تسجيل خروجك بنجاح',
     'preferencesAdjustSuccessfully'=>'تم تحديث تفضيلاتك بنجاح',
+    'userNotFound'=>'لايمكن ايجاد هذا المستخدم',
+    'resetPassword'=>'تم تحديث كلمة المرور بنجاح',
+
 
 ];

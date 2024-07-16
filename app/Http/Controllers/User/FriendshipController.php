@@ -10,6 +10,12 @@ use Illuminate\Http\Request;
 
 class FriendshipController
 {
+    public function changeNumbers($userId,$number,$type){ //type = following or followers
+        $user=User::find($userId);
+        $newNumber= ($user->$type)+$number;
+        $user->$type=$newNumber;
+        $user->save();
+    }
     public function sendFollowRequest(Request $request)
     {
         $senderId = $request->user()->id;
@@ -23,6 +29,8 @@ class FriendshipController
             $existingFriendship->status = 'MUTUAL';
             $existingFriendship->mutual_at = $currentDateTime;
             $existingFriendship->save();
+            self::changeNumbers($senderId,1,'following');
+            self::changeNumbers($receiverId,1,'followers');
             return response()->json(['message' => __('friendship.requestSentSuccessfully')], 201);
         }
         $friendShip = Friendship::create([
@@ -31,6 +39,8 @@ class FriendshipController
             'status' => 'FOLLOWING',
         ]);
         $friendShip->save();
+        self::changeNumbers($senderId,1,'following');
+        self::changeNumbers($receiverId,1,'followers');
         return response()->json(['message' => __('friendship.requestSentSuccessfully')], 201);
     }
     public function cancelFollowing(Request $request)
@@ -52,6 +62,8 @@ class FriendshipController
 
         if ($friendship->status === 'FOLLOWING') {
             Friendship::deleteFriendship($senderId, $receiverId);
+            self::changeNumbers($senderId,-1,'following');
+            self::changeNumbers($receiverId,-1,'followers');
             return response()->json(['message' => __('friendship.cancelFollowing')], 200);
         } else if ($friendship->status === 'MUTUAL') {
             if ($friendship->sender_id === $senderId && $friendship->receiver_id === $receiverId) {
@@ -68,11 +80,12 @@ class FriendshipController
                     'mutual_at' => null,
                 ]);
             }
+            self::changeNumbers($senderId,-1,'following');
+            self::changeNumbers($receiverId,-1,'followers');
             return response()->json(['message' => __('friendship.cancelFollowing')], 200);
 
         }
     }
-
     public function blockUser(Request $request)
     {
         $userId = $request->user()->id;
@@ -87,9 +100,12 @@ class FriendshipController
         $friendship->status = 'BLOCKED';
         $friendship->blocker_id = $userId;
         $friendship->save();
+        self::changeNumbers($userId,-1,'following');
+        self::changeNumbers($targetId,-1,'followers');
+        self::changeNumbers($userId,-1,'followers');
+        self::changeNumbers($targetId,-1,'following');
         return response()->json(['message' => __('friendship.blockedSuccessfully')], 200);
     }
-
     public function getFollowers(Request $request)
     {
         $userId = $request->user()->id;
@@ -120,7 +136,6 @@ class FriendshipController
         $allFollowers = $followers->merge($mutualFriends);
         return response()->json(['Followers' => $allFollowers,'Followers number'=>$allFollowers->count()], 200);
     }
-
     public function getFollowing(Request $request)
     {
         $userId = $request->user()->id;
@@ -153,7 +168,6 @@ class FriendshipController
 
         return response()->json(['Following' => $allFollowing,'Following number'=>$allFollowing->count()], 200);
     }
-
     public function getBlocked(Request $request)
     {
         $userId = $request->user()->id;

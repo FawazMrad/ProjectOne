@@ -21,7 +21,7 @@ return new class extends Migration
             $table->integer('vip_chairs')->nullable();
             $table->boolean('is_vip');
             $table->string('website', 255)->nullable();
-            $table->integer('rating')->nullable();
+            $table->float('rating')->default(0);
             $table->string('image', 255)->nullable();
             $table->integer('cost');
             $table->timestamps();

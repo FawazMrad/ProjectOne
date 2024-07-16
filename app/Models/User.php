@@ -31,6 +31,8 @@ class User extends Authenticatable implements FilamentUser, HasName
         'phone_number',
         'birth_date',
         'points',
+        'followers',
+        'following',
         'rating',
         'profile_pic'
     ];
@@ -106,5 +108,14 @@ class User extends Authenticatable implements FilamentUser, HasName
     {
         return $this->belongsToMany(User::class, 'Friendships', 'receiver_id', 'sender_id');
 
+    }
+    public function sentGifts()
+    {
+        return $this->hasMany(GiftHistory::class, 'sender_id');
+    }
+
+    public function receivedGifts()
+    {
+        return $this->hasMany(GiftHistory::class, 'receiver_id');
     }
 }

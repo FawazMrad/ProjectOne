@@ -22,6 +22,8 @@ return new class extends Migration
             $table->date('birth_date')->nullable();
             $table->integer('points')->default(0);
             $table->float('rating')->default(0);
+            $table->integer('followers')->default(0);
+            $table->integer('following')->default(0);
             $table->text('profile_pic', 255)->nullable();
             $table->text('qr_code', 255)->nullable();
             $table->timestamps();

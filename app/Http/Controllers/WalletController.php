@@ -2,26 +2,69 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\DateTimeHelper;
+use App\Helpers\WalletHelper;
+use App\Models\GiftHistory;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 
 class WalletController extends Controller
 {
-
-    public static function refund($userId,$creatorId,$quantity){
-        $wallet=Wallet::where('user_id',$creatorId)->first();
+    public static function refund($userId, $creatorId, $quantity)
+    {
+        $wallet = Wallet::where('user_id', $creatorId)->first();
         $newBalance = $wallet->balance - $quantity;
         $wallet->balance = $newBalance;
         $wallet->save();
-        self::depositStatic(1,$userId,$quantity);
-        return ['message' => __('wallet.giftOk'),'status' => true];
+        self::depositStatic(0.02, $userId, $quantity);
+        return ['message' => __('wallet.giftOk'), 'status' => true];
     }
+
+    public static function depositStatic($rate, $ownerId, $quantity)
+    {
+        if ($rate != 1) $quantity = $quantity - ($quantity * $rate);
+
+        $wallet = Wallet::where('user_id', $ownerId)->first();
+        $newBalance = self::getWalletBalanceStatic($wallet) + $quantity;
+        $wallet->balance = $newBalance;
+        $wallet->save();
+
+        return ['status' => true, 'message' => __('wallet.depositSuccess')];
+    }
+
+    public static function getWalletBalanceStatic($wallet)
+    {
+        $balance = $wallet->balance;
+        return $balance;
+    }
+
+    public function recentTransactions(Request $request)
+    {
+        $user = $request->user();
+        $wallet = $user->wallet();
+
+        $gifts = WalletHelper::getGifts($user);
+        $sentGifts = $gifts['sentGifts'];
+        $receivedGifts = $gifts['receivedGifts'];
+
+        $deposits = WalletHelper::getDeposits($wallet);
+
+        $sentGiftsCollection = collect($sentGifts);
+        $receivedGiftsCollection = collect($receivedGifts);
+        $depositsCollection = collect($deposits);
+
+        $allTransactions = $sentGiftsCollection->merge($depositsCollection)->merge($receivedGiftsCollection);
+
+        return response()->json(['All transactions' => $allTransactions], 200);
+    }
+
     public function gift(Request $request)
     {
-        $senderId = $request->input('senderId');
+        $senderId = $request->user()->id;
         $receiverId = $request->input('receiverId');
         $quantity = $request->input('quantity');
         $result = self::giftStatic($senderId, $receiverId, $quantity);
+        if ($result['status']) self::createGiftObject($senderId, $receiverId, $quantity);
         return response()->json($result);
 
     }
@@ -42,24 +85,10 @@ class WalletController extends Controller
         $wallet = Wallet::where('user_id', $ownerId)->first();
         $balance = self::getWalletBalanceStatic($wallet);
         if ($quantity > $balance) {
-            return [
-                'wallet' => $wallet,
-                'status' => false,
-                'message' => __('wallet.cannotWithdraw')
-            ];
+            return ['wallet' => $wallet, 'status' => false, 'message' => __('wallet.cannotWithdraw')];
         }
-        return [
-            'wallet' => $wallet,
-            'status' => true,
-            'message' => __('wallet.withdrawSuccess')
-        ];
+        return ['wallet' => $wallet, 'status' => true, 'message' => __('wallet.withdrawSuccess')];
 
-    }
-
-    public static function getWalletBalanceStatic($wallet)
-    {
-        $balance = $wallet->balance;
-        return $balance;
     }
 
     public static function withdraw($ownerId, $quantity)
@@ -70,36 +99,22 @@ class WalletController extends Controller
             $newBalance = $wallet->balance - $quantity;
             $wallet->balance = $newBalance;
             $wallet->save();
-            return [
-                'status' => $userCanPay['status'],
-                'message' => $userCanPay['message']
-            ];
+            return ['status' => $userCanPay['status'], 'message' => $userCanPay['message']];
         }
-        return [
-            'status' => $userCanPay['status'],
-            'message' => $userCanPay['message']
-        ];
+        return ['status' => $userCanPay['status'], 'message' => $userCanPay['message']];
     }
 
-    public static function depositStatic($rate, $ownerId, $quantity)
+    public static function createGiftObject($senderId, $receiverId, $quantity)
     {
-        if ($rate != 1)
-            $quantity = $quantity - ($quantity * $rate);
+        $giftObject = GiftHistory::create(['sender_id' => $senderId, 'receiver_id' => $receiverId, 'quantity' => $quantity, 'gift_date' => DateTimeHelper::getCurrentDateTime()]);
+        $giftObject->save();
 
-        $wallet = Wallet::where('user_id', $ownerId)->first();
-        $newBalance = self::getWalletBalanceStatic($wallet) + $quantity;
-        $wallet->balance = $newBalance;
-        $wallet->save();
-
-        return [
-            'status' => true,
-            'message' => __('wallet.depositSuccess')
-        ];
     }
 
     public function getWalletBalance(Request $request)
     {
-        $wallet = Wallet::where('user_id', $request->input('ownerId'))->first();
+        $user = $request->user();
+        $wallet = $user->wallet()->first();
         $balance = self::getWalletBalanceStatic($wallet);
         return response()->json(['balance' => $balance], 200);
     }
@@ -113,4 +128,5 @@ class WalletController extends Controller
 
         return response()->json($result);
     }
+
 }

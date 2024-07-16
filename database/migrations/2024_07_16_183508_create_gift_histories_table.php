@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sounds', function (Blueprint $table) {
+        Schema::create('gift_histories', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['LIVE', 'RECORDED', 'DJ']);
-            $table->string('genre', 50);
-            $table->string('artist', 50)->nullable();
-            $table->float('rating')->default(0);
-            $table->string('image', 255)->nullable();
-            $table->decimal('cost', 10, 2);
+            $table->foreignId('sender_id')->references('id')->on('users');
+            $table->foreignId('receiver_id')->references('id')->on('users');
+            $table->integer('quantity');
+            $table->dateTime('gift_date');
             $table->timestamps();
         });
     }
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sounds');
+        Schema::dropIfExists('gift_histories');
     }
 };
