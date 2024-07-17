@@ -106,7 +106,7 @@ class WalletController extends Controller
 
     public static function createGiftObject($senderId, $receiverId, $quantity)
     {
-        $giftObject = GiftHistory::create(['sender_id' => $senderId, 'receiver_id' => $receiverId, 'quantity' => $quantity, 'gift_date' => DateTimeHelper::getCurrentDateTime()]);
+        $giftObject = GiftHistory::create(['sender_id' => $senderId, 'receiver_id' => $receiverId, 'quantity' => $quantity]);
         $giftObject->save();
 
     }

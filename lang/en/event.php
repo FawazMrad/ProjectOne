@@ -33,6 +33,7 @@ return [
     'checkedInNotPurchased'=>'This user does not have a ticket',
     'userAlreadyCheckedIn'=>'This user already was check in',
     'noSuchEvents'=>'There are no such events right now',
+    'noSuchCategory'=>'There are no such categories right now',
     'noPopularEvents'=>'There are no most popular events till now',
     'rateDone'=>'Rate was sent successfully',
     'alreadyRated'=>'This user already rate this event',

@@ -31,6 +31,7 @@ return [
     'checkedInNotPurchased'=>'هذا المستخدم لايملك تذكرة',
     'userAlreadyCheckedIn'=>'هذا المستخدم تم التاكد منه بالفعل',
     'noSuchEvents'=>'لا يوجد احداث مماثلة حتى الان',
+    'noSuchCategory'=>'لا يوجد انواع مماثلة حتى الان',
     'noPopularEvents'=>'ليس هناك احداث مميزة حاليا',
      'rateDone'=>'تم ارسال التقييم بنجاح',
     'alreadyRated'=>'هذا المستخدم قام بالتصويت مسبقا',

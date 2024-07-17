@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Helpers\DateTimeHelper;
 use App\Helpers\QR_CodeHelper;
+use App\Models\Friendship;
 use App\Models\User;
 use http\Env\Response;
 use Illuminate\Http\Request;
@@ -15,13 +16,34 @@ class UserController
 {
     public function getUser(Request $request)
     {
-        $fields = ['id', 'first_name', 'last_name', 'email', 'rating', 'rating', 'qr_code', 'followers', 'following'];
+        $user = $request->user();
+        $fields = ['id', 'first_name', 'last_name', 'email', 'rating', 'qr_code', 'followers', 'following'];
+        $desiredUser = User::select($fields)->find($request->input('userId'));
 
-        $user = User::select($fields)->find($request->input('userId'));
+        if ($desiredUser) {
+            $friendship = Friendship::where(function ($query) use ($user, $desiredUser) {
+                $query->where('sender_id', $user->id)
+                    ->where('receiver_id', $desiredUser->id);
+            })->orWhere(function ($query) use ($user, $desiredUser) {
+                $query->where('sender_id', $desiredUser->id)
+                    ->where('receiver_id', $user->id);
+            })->first();
 
-        if ($user)
-            return response()->json(['user' => $user], 200);
-        return response()->json(['message' => 'user not found'], 404);
+            $friendshipStatus = 'NOT_FOLLOWING'; // Default status
+
+            if ($friendship) {
+                if ($friendship->status == 'BLOCKED') {
+                    $friendshipStatus = 'blocked';
+                } elseif (($friendship->status == 'FOLLOWING' && $friendship->sender_id===$user->id) || $friendship->status == 'MUTUAL') {
+                    $friendshipStatus = 'FOLLOWING';
+                }
+
+            }
+
+            return response()->json(['user' => $desiredUser, 'friendship_status' => $friendshipStatus], 200);
+        }
+
+        return response()->json(['message' => 'User not found'], 404);
     }
     public function getProfile(Request $request)
     {
@@ -69,7 +91,12 @@ class UserController
     }
     public function searchUsers(Request $request)
     {
+        $user = $request->user();  // Get the authenticated user
+
+        // Initialize the query for users
         $query = User::query();
+
+        // Apply search filters
         if ($request->has('name')) {
             $name = $request->input('name');
             $query->where(DB::raw("CONCAT(first_name, ' ', last_name)"), 'LIKE', '%' . $name . '%');
@@ -82,7 +109,7 @@ class UserController
 
         if ($request->has('phoneNumber')) {
             $phoneNumber = $request->input('phoneNumber');
-            $query->where('phone_number', $phoneNumber );
+            $query->where('phone_number', $phoneNumber);
         }
 
         if ($request->has('minRating')) {
@@ -92,11 +119,26 @@ class UserController
         $users = $query->get();
 
         if ($users->isNotEmpty()) {
-            return response()->json(['users' => $users], 200);
+            $filteredUsers = $users->filter(function ($filteredUser) use ($user) {
+                $friendship = Friendship::where(function ($query) use ($user, $filteredUser) {
+                    $query->where('sender_id', $user->id)
+                        ->where('receiver_id', $filteredUser->id);
+                })->orWhere(function ($query) use ($user, $filteredUser) {
+                    $query->where('sender_id', $filteredUser->id)
+                        ->where('receiver_id', $user->id);
+                })->first();
+
+                return !$friendship || $friendship->status !== 'BLOCKED';
+            });
+
+            if ($filteredUsers->isNotEmpty()) {
+                return response()->json(['users' => $filteredUsers->values()], 200);
+            }
         }
 
         return response()->json(['message' => __('auth.userNotFound')], 404);
     }
+
     public function editProfile(Request $request){
         $user = $request->user();
         if ($request->has('firstName')) {

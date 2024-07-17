@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('station_id')->references('id')->on('stations');
             $table->foreignId('wallet_id')->references('id')->on('wallets');
             $table->integer('quantity');
-            $table->dateTime('fill_date');
             $table->timestamps();
         });
     }

@@ -33,11 +33,6 @@ Route::post('/users/signUp', [AuthController::class, 'signUp']);//for user signu
 Route::post('/users/signIn', [AuthController::class, 'signIn']);//for user traditional signIn
 Route::post('/users/googleSignIn', [AuthController::class, 'googleSignIn']);//for user google signIn
 
-Route::post('/events/getEventsByCategory', [EventController::class, 'getEventsByCategory']); //getThe events by their categories
-Route::post('/events/searchEvents', [EventController::class, 'searchEvents']); //getThe events by : categoryId,startDate&endDate,location,minAge,priceRange(10-20)
-Route::get('/events/mostPopularEvents', [EventController::class, 'mostPopularEvents']); //getThe most popular events
-Route::post('/events/getEvent', [EventController::class, 'getEvent']); //getThe desired event
-Route::post('/users/getUser', [UserController::class, 'getUser']); //getThe desired user
 //station
 Route::post('/stations/deposit', [StationController::class, 'stationDeposit']);
 Route::post('/stations/signIn', [StationController::class, 'stationSignIn']);
@@ -56,6 +51,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/resources/categories', [ResourceController::class, 'getCategories']); //get the event categories and decoration items categories
     Route::post('/events/getPrices', [EventController::class, 'getPrices']); //get the event's tickets prices
     Route::post('/events/adjustPrices', [EventController::class, 'adjustPrices']); //adjust the event's tickets prices
+
+    Route::post('/users/getUser', [UserController::class, 'getUser']); //getThe desired user
+    Route::post('/events/searchEvents', [EventController::class, 'searchEvents']); //getThe events by : categoryId,startDate&endDate,location,minAge,priceRange(10-20)
+    Route::post('/events/getEvent', [EventController::class, 'getEvent']); //getThe desired event
+    Route::get('/events/mostPopularEvents', [EventController::class, 'mostPopularEvents']); //getThe most popular events
+    Route::post('/events/getEventsByCategory', [EventController::class, 'getEventsByCategory']); //getThe events by their categories
 
     //for wallet
     Route::post('/wallet/deposit', [WalletController::class, 'deposit']); //add money to the user's wallet

@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 use App\Models\Attendee;
 use App\Models\Event;
+use App\Models\Friendship;
 use App\Models\VenueReservation;
 use Carbon\Carbon;
 use DateTime;
@@ -11,6 +12,22 @@ use DateTime;
 
 class EventHelper
 {
+    public static function filterEventsByBlockedFriendships($events, $user)
+    {
+        $filteredEvents = $events->filter(function ($event) use ($user) {
+            $eventCreator = $event->user()->first();
+
+            $friendship = Friendship::where(function ($query) use ($user, $eventCreator) {
+                $query->where('sender_id', $user->id)->where('receiver_id', $eventCreator->id);
+            })->orWhere(function ($query) use ($user, $eventCreator) {
+                $query->where('sender_id', $eventCreator->id)->where('receiver_id', $user->id);
+            })->first();
+
+            return !$friendship || $friendship->status !== 'BLOCKED';
+        });
+        return $filteredEvents;
+    }
+
     public static function getEventDates($eventId)
     {
         $event = Event::find($eventId);
@@ -25,22 +42,13 @@ class EventHelper
         $dateDifference = $currentDateTime->diff($eventStartDate); //between now and the start date
         $creationToActionDiff = $currentDateTime->diff($eventCreationDate);
 
-        return [
-            'currentDateTime' => $currentDateTime,
-            'eventCreationDate' => $eventCreationDate,
-            'creationToActionDiff' => $creationToActionDiff,
-            'startDate' => $eventStartDate,
-            'endDate' => $eventEndDate,
-            'dateDifference' => $dateDifference];
+        return ['currentDateTime' => $currentDateTime, 'eventCreationDate' => $eventCreationDate, 'creationToActionDiff' => $creationToActionDiff, 'startDate' => $eventStartDate, 'endDate' => $eventEndDate, 'dateDifference' => $dateDifference];
     }
 
     public static function getStartAndEndDateForEvent($eventId)
     {
         $event = Event::find($eventId);
-        return [
-            'startDate' => Carbon::parse($event->start_date)->subHours(4)->toDateTimeString(),
-            'endDate' => Carbon::parse($event->end_date)->addHours(4)->toDateTimeString(),
-        ];
+        return ['startDate' => Carbon::parse($event->start_date)->subHours(4)->toDateTimeString(), 'endDate' => Carbon::parse($event->end_date)->addHours(4)->toDateTimeString(),];
     }
 
     public static function generateSeatNumber($eventId, $ticketType, $venueReservation)
@@ -51,11 +59,7 @@ class EventHelper
                 return response()->json(['message' => 'there is no vip seats for this event'], 404);
             }
             $vipCount = $venueReservation->booked_vip_seats;
-            $availableSeat = Attendee::where('event_id', $eventId)
-                ->where('ticket_type', 'VIP')
-                ->where('status', 'CANCELLED')
-                ->orderBy('seat_number')
-                ->first();
+            $availableSeat = Attendee::where('event_id', $eventId)->where('ticket_type', 'VIP')->where('status', 'CANCELLED')->orderBy('seat_number')->first();
 
             if ($vipCount >= $reservedVipSeats && !$availableSeat) {
                 //  return response()->json(['message'=>'No vip seats available'],400);
@@ -75,11 +79,7 @@ class EventHelper
             }
             $regularCount = $venueReservation->booked_seats;
 
-            $availableSeat = Attendee::where('event_id', $eventId)
-                ->where('ticket_type', 'REGULAR')
-                ->where('status', 'CANCELLED')
-                ->orderBy('seat_number')
-                ->first();
+            $availableSeat = Attendee::where('event_id', $eventId)->where('ticket_type', 'REGULAR')->where('status', 'CANCELLED')->orderBy('seat_number')->first();
 
             if ($regularCount >= $reservedRegularSeats && !$availableSeat) {
                 // return response()->json(['message'=>'No regular seats available'],400);
@@ -95,9 +95,7 @@ class EventHelper
 
     public static function bookSeat($event, $type)
     {
-        if ($type === 'VIP')
-            $bookedType = 'booked_vip_seats';
-        else
+        if ($type === 'VIP') $bookedType = 'booked_vip_seats'; else
             $bookedType = 'booked_seats';
         $venueReservation = VenueReservation::where('event_id', $event->id)->first();
         $bookedSeats = ($venueReservation->$bookedType) + 1;
@@ -116,14 +114,13 @@ class EventHelper
         $user->rating = $newRating;
         $user->save();
     }
-    public static function getCreatedEventsCalender($user){
-        $days=DateTimeHelper::getFirstDayOfCurrentMonthAndLastDayOfAfterTowMonths();
-        $firstDayOfCurrentMonth=$days['firstDayOfCurrentMonth'];
-            $lastDayOfTwoMonthsAhead=$days['lastDayOfTwoMonthsAhead'];
-        $userCreatedEvents = $user->events()
-            ->select('id', 'user_id', 'category_id', 'title', 'start_date', 'min_age', 'is_paid', 'is_private','image')
-            ->whereBetween('start_date', [$firstDayOfCurrentMonth, $lastDayOfTwoMonthsAhead])
-            ->get();
+
+    public static function getCreatedEventsCalender($user)
+    {
+        $days = DateTimeHelper::getFirstDayOfCurrentMonthAndLastDayOfAfterTowMonths();
+        $firstDayOfCurrentMonth = $days['firstDayOfCurrentMonth'];
+        $lastDayOfTwoMonthsAhead = $days['lastDayOfTwoMonthsAhead'];
+        $userCreatedEvents = $user->events()->select('id', 'user_id', 'category_id', 'title', 'start_date', 'min_age', 'is_paid', 'is_private', 'image')->whereBetween('start_date', [$firstDayOfCurrentMonth, $lastDayOfTwoMonthsAhead])->get();
         $userCreatedEvents = $userCreatedEvents->map(function ($event) {
             $eventArray = $event->toArray();
             $eventArray['state'] = 'CREATED';
@@ -132,33 +129,28 @@ class EventHelper
         return $userCreatedEvents;
     }
 
-        public static function getInvitedOrPurchasedEventsCalender($user,$status)
-        {
-            $days=DateTimeHelper::getFirstDayOfCurrentMonthAndLastDayOfAfterTowMonths();
-            $firstDayOfCurrentMonth=$days['firstDayOfCurrentMonth'];
-            $lastDayOfTwoMonthsAhead=$days['lastDayOfTwoMonthsAhead'];
+    public static function getInvitedOrPurchasedEventsCalender($user, $status)
+    {
+        $days = DateTimeHelper::getFirstDayOfCurrentMonthAndLastDayOfAfterTowMonths();
+        $firstDayOfCurrentMonth = $days['firstDayOfCurrentMonth'];
+        $lastDayOfTwoMonthsAhead = $days['lastDayOfTwoMonthsAhead'];
 
-           $statusUpper =($status==='invited') ?'INVITED' :'PURCHASED';
+        $statusUpper = ($status === 'invited') ? 'INVITED' : 'PURCHASED';
 
-            $events = $user->attendees()
-                ->where('status', $statusUpper)
-                ->whereHas('event', function ($query) use ($firstDayOfCurrentMonth, $lastDayOfTwoMonthsAhead) {
-                    $query->whereBetween('start_date', [$firstDayOfCurrentMonth, $lastDayOfTwoMonthsAhead]);
-                })
-                ->with(['event' => function ($query) {
-                    $query->select('id', 'user_id', 'category_id', 'title', 'start_date', 'min_age', 'is_paid', 'is_private','image');
-                }])
-                ->get()
-                ->pluck('event'); // Extract only the event objects
+        $events = $user->attendees()->where('status', $statusUpper)->whereHas('event', function ($query) use ($firstDayOfCurrentMonth, $lastDayOfTwoMonthsAhead) {
+                $query->whereBetween('start_date', [$firstDayOfCurrentMonth, $lastDayOfTwoMonthsAhead]);
+            })->with(['event' => function ($query) {
+                $query->select('id', 'user_id', 'category_id', 'title', 'start_date', 'min_age', 'is_paid', 'is_private', 'image');
+            }])->get()->pluck('event'); // Extract only the event objects
 
-            // Map events to add state attribute
-            $events = $events->map(function ($event) use ($statusUpper) {
-                $eventArray = $event->toArray();
-                $eventArray['state'] = $statusUpper;
-                return $eventArray;
-            });
+        // Map events to add state attribute
+        $events = $events->map(function ($event) use ($statusUpper) {
+            $eventArray = $event->toArray();
+            $eventArray['state'] = $statusUpper;
+            return $eventArray;
+        });
 
-            return $events;
+        return $events;
     }
 
 }

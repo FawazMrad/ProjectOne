@@ -11,8 +11,7 @@ class FillHistory extends Model
     protected $fillable=[
         'station_id',
         'wallet_id',
-        'quantity',
-        'fill_date'
+        'quantity'
     ];
     public function station(){
         return $this->belongsTo(Station::class);

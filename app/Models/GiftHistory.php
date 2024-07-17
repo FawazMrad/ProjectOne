@@ -11,8 +11,7 @@ class GiftHistory extends Model
     protected $fillable = [
         'sender_id',
         'receiver_id',
-        'quantity',
-        'gift_date'
+        'quantity'
     ];
     public function sender()
     {
