@@ -73,15 +73,18 @@ class StationController extends Controller
             'station' => $station
         ], 200);
     }
-    public function monthlyReport(Request $request){
-        $stationId=$request->input('stationId');
-         $station=Station::find($stationId);
-         $days=DateTimeHelper::getFirstDayOfCurrentMonthAndLastDayOfAfterTowMonths();
-        $depositHistory=$station->fillHistories()
-            ->whereBetween('created_at',[$days['firstDayOfCurrentMonth'],$days['lastDayOfCurrentMonth']])->get();
-          if($depositHistory)
-              return response()->json(['Fill History'=>$depositHistory],200);
-              return response()->json(['message'=>__('wallet.emptyHistory')],404);
+    public function monthlyReport(Request $request)
+    {
+        $stationId = $request->input('stationId');
+        $station = Station::find($stationId);
+        $days = DateTimeHelper::getFirstDayOfCurrentMonthAndLastDayOfAfterTowMonths();
+        $depositHistory = $station->fillHistories()
+            ->whereBetween('created_at', [$days['firstDayOfCurrentMonth'], $days['lastDayOfCurrentMonth']])->get();
+        if ($depositHistory->isNotEmpty()) {
+        $totalQuantity=$depositHistory->sum('quantity');
+        return response()->json(['Fill History' => $depositHistory, 'Total Quantity' => $totalQuantity], 200);
+
+    }return response()->json(['message'=>__('wallet.emptyHistory')],404);
 
     }
 }

@@ -150,34 +150,25 @@ class EventController extends Controller
 
         $totalChairs = $numberOfRegularChairs + $numberOfVipChairs;
 
-        // Calculate rates
-        if ($totalChairs > 0) {
-            $regularRate = $numberOfRegularChairs / $totalChairs;
-            $vipRate = $numberOfVipChairs / $totalChairs;
-        }
-
-        // Calculate ticket prices
-        $regularTicketPrice = 0;
-        $vipTicketPrice = 0;
-        // dd($numberOfVipChairs,$vipRate,$numberOfRegularChairs,$regularRate,$totalChairs,$totalCost);
-        if ($numberOfVipChairs > 0 && $numberOfRegularChairs > 0) {
-            $vipTicketPrice = ($totalCost * $vipRate) / $numberOfVipChairs;
-            $regularTicketPrice = ($totalCost * $regularRate) / $numberOfRegularChairs;
-            return ['regularTicketPrice' => $regularTicketPrice, 'vipTicketPrice' => $vipTicketPrice];
-        } else if ($numberOfRegularChairs > 0 && $numberOfVipChairs <= 0) {
-            $regularTicketPrice = ($totalCost * $regularRate) / $numberOfRegularChairs;
-            return ['regularTicketPrice' => $regularTicketPrice, 'vipTicketPrice' => 0];
-        } else if ($numberOfRegularChairs <= 0 && $numberOfVipChairs > 0) {
-            $vipTicketPrice = ($totalCost * $vipRate) / $numberOfVipChairs;
-            return ['regularTicketPrice' => 0, 'vipTicketPrice' => $vipTicketPrice];
-        } else {
-            // Get the venue capacity if no chairs are reserved
+        if ($totalChairs == 0) {
             $capacity = ResourcesHelper::getVenueCapacity($eventId);
             if ($capacity > 0) {
                 return ['regularTicketPrice' => $totalCost / $capacity, 'vipTicketPrice' => 0];
+            } else {
+                throw new Exception("Invalid venue capacity for event ID: $eventId");
             }
         }
-        throw new Exception("Invalid venue capacity for event ID: $eventId");
+
+        $regularRate = $numberOfRegularChairs / $totalChairs;
+        $vipRate = $numberOfVipChairs / $totalChairs;
+
+        $regularTicketPrice = $numberOfRegularChairs > 0 ? ($totalCost * $regularRate) / $numberOfRegularChairs : 0;
+        $vipTicketPrice = $numberOfVipChairs > 0 ? ($totalCost * $vipRate) / $numberOfVipChairs : 0;
+
+        return [
+            'regularTicketPrice' => $regularTicketPrice,
+            'vipTicketPrice' => $vipTicketPrice,
+        ];
     }
 
     public function remove(Request $request)

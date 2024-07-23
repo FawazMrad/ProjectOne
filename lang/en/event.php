@@ -8,7 +8,7 @@ return [
     'IdNotFoundOrDates' => 'Invalid event ID or event dates not found',
     'completeStepTow' => 'Step tow Completed Successfully',
     'errorIncompleteStepTow' => 'Step tow can not be Complete Successfully',
-    'deleteSuccess' => 'Event was deleted successfully ,and your rating now decreased by 0.2',
+    'deleteSuccess' => 'Event was deleted successfully ,and your rating now decreased by 0.3',
     'deleteErrorBeforeEvent' => 'We cannot delete your event cause you want to delete before less than a week from its start date',
     'priceAdjustSuccess' => 'The prices of the event was adjusted successfully!',
     'adjustPricesErrorBeforeEvent' => 'We cannot adjust the prices for your event cause you want that before less than a week from its start date',
