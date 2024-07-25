@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('description_en', 255)->nullable();
             $table->string('description_ar', 255)->nullable();
             $table->integer('cost');
-            $table->string('image', 255)->nullable();
+            $table->text('image', 255)->nullable();
             $table->timestamps();
         });
     }

@@ -13,7 +13,6 @@ class TranslationHelper
             $description = $data['description'];
           $tr = new GoogleTranslate();
 
-
             $tr->setSource('auto');
             $tr->setTarget('en');
             $description_en = $tr->translate($description);

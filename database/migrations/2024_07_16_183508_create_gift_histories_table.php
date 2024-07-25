@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('sender_id')->references('id')->on('users');
             $table->foreignId('receiver_id')->references('id')->on('users');
             $table->integer('quantity');
-            $table->dateTime('gift_date');
             $table->timestamps();
         });
     }

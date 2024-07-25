@@ -22,7 +22,7 @@ return new class extends Migration
             $table->boolean('is_vip');
             $table->string('website', 255)->nullable();
             $table->float('rating')->default(0);
-            $table->string('image', 255)->nullable();
+            $table->text('image', 255)->nullable();
             $table->integer('cost');
             $table->timestamps();
         });
