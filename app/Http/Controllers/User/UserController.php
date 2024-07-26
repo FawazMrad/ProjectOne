@@ -17,6 +17,7 @@ class UserController
     public function getUser(Request $request)
     {
         $user = $request->user();
+        $userBirthDate=$user->birth_date;
         $fields = ['id', 'first_name', 'last_name', 'email', 'rating', 'qr_code', 'followers', 'following'];
         $desiredUser = User::select($fields)->find($request->input('userId'));
 
@@ -39,8 +40,8 @@ class UserController
                 }
 
             }
-
-            return response()->json(['user' => $desiredUser, 'friendship_status' => $friendshipStatus], 200);
+            $age=DateTimeHelper::userAge($userBirthDate);
+            return response()->json(['user' => $desiredUser, 'friendship_status' => $friendshipStatus,'age'=>$age], 200);
         }
 
         return response()->json(['message' => 'User not found'], 404);
@@ -48,7 +49,9 @@ class UserController
     public function getProfile(Request $request)
     {
         $user = $request->user();
-        return response()->json(['user' => $user], 200);
+        $userBirthDate=$user->birth_date;
+        $age=DateTimeHelper::userAge($userBirthDate);
+        return response()->json(['user' => $user , 'age'=>$age], 200);
     }
     public function getAttendedEvents(Request $request)
     {

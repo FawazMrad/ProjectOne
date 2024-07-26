@@ -12,19 +12,52 @@ use DateTime;
 
 class EventHelper
 {
+//    public static function filterEventsByBlockedFriendships($events, $user)
+//    {
+//        $filteredEvents = $events->filter(function ($event) use ($user) {
+//        $eventCreator = $event->user()->first();
+//        $friendship = Friendship::where(function ($query) use ($user, $eventCreator) {
+//            $query->where('sender_id', $user->id)->where('receiver_id', $eventCreator->id);
+//        })->orWhere(function ($query) use ($user, $eventCreator) {
+//            $query->where('sender_id', $eventCreator->id)->where('receiver_id', $user->id);
+//        })->first();
+//
+//        return !$friendship || $friendship->status !== 'BLOCKED';
+//    });
+//return $filteredEvents;
+//}
     public static function filterEventsByBlockedFriendships($events, $user)
     {
-        $filteredEvents = $events->filter(function ($event) use ($user) {
-            $eventCreator = $event->user()->first();
+        // Initialize filtered events as an empty collection or array
+        $filteredEvents = collect();
 
+        // Check if $events is iterable (array or collection)
+        if (is_iterable($events)) {
+            $filteredEvents = collect($events)->filter(function ($event) use ($user) {
+                $eventCreator = $event->user()->first();
+                $friendship = Friendship::where(function ($query) use ($user, $eventCreator) {
+                    $query->where('sender_id', $user->id)->where('receiver_id', $eventCreator->id);
+                })->orWhere(function ($query) use ($user, $eventCreator) {
+                    $query->where('sender_id', $eventCreator->id)->where('receiver_id', $user->id);
+                })->first();
+
+                return !$friendship || $friendship->status !== 'BLOCKED';
+            });
+        } else {
+            // Handle single event case
+            $event = $events; // Since it's a single event
+            $eventCreator = $event->user()->first();
             $friendship = Friendship::where(function ($query) use ($user, $eventCreator) {
                 $query->where('sender_id', $user->id)->where('receiver_id', $eventCreator->id);
             })->orWhere(function ($query) use ($user, $eventCreator) {
                 $query->where('sender_id', $eventCreator->id)->where('receiver_id', $user->id);
             })->first();
 
-            return !$friendship || $friendship->status !== 'BLOCKED';
-        });
+            if (!$friendship || $friendship->status !== 'BLOCKED') {
+                $filteredEvents->push($event);
+            }
+        }
+
         return $filteredEvents;
     }
 

@@ -54,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/users/getUser', [UserController::class, 'getUser']); //getThe desired user
     Route::post('/events/searchEvents', [EventController::class, 'searchEvents']); //getThe events by : categoryId,startDate&endDate,location,minAge,priceRange(10-20)
+    Route::post('/events/searchEventsByQR', [EventController::class, 'searchEventsByQR']); //getThe events by : qr
     Route::post('/events/getEvent', [EventController::class, 'getEvent']); //getThe desired event
     Route::get('/events/mostPopularEvents', [EventController::class, 'mostPopularEvents']); //getThe most popular events
     Route::post('/events/getEventsByCategory', [EventController::class, 'getEventsByCategory']); //getThe events by their categories
@@ -63,6 +64,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/wallet/balance', [WalletController::class, 'getWalletBalance']); // user's wallet balance
     Route::post('/wallet/gift', [WalletController::class, 'gift']); //send money gifts
     Route::get('/wallet/recentTransactions', [WalletController::class, 'recentTransactions']); //recentTransactions
+    Route::get('/wallet/getUserPointsWithFactor', [WalletController::class, 'getUserPointsWithFactor']); //getUserPointsWithFactor
+    Route::post('/wallet/exchangePoints', [WalletController::class, 'exchangePoints']); //getUserPointsWithFactor
    //update event
     Route::post('/events/getEventReservations', [EventController::class, 'getEventReservations']); //(first step for event update)get event's reservations
     Route::post('/events/updateEventQuantitiesReservations', [EventController::class, 'updateEventQuantitiesReservations']); //(second step for event update)// furniture, decoration item , security ,food ,drink {for food and drink I want a servingDate}
