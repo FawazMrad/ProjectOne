@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -28,13 +29,30 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->colors([
-                'primary' => Color::Amber,
+                'danger' => Color::Red,
+                'gray' => '#303556',
+                'info' => '#008B8B',
+                'primary' => '#7f306f',
+                'success' => Color::Emerald,
+                'warning' => Color::Orange,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
             ])
+            //->font('Inknut Antiqua')
+            ->font('Nanum Gothic')
+            ->navigationGroups([
+                'Events Management',
+                'User Management'
+            ])
+            //->viteTheme('resources/css/filament/admin/theme.css')
+            ->defaultThemeMode(ThemeMode::Dark)
+            ->brandName('EventTastic')
+            ->brandLogo(asset('images\logo.png'))
+            ->brandLogoHeight('8rem')
+            ->favicon(asset('images\icon.png'))
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,

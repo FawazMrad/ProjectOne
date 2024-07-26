@@ -6,11 +6,13 @@ namespace App\Models;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Factories\BelongsToManyRelationship;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser, HasName
@@ -33,7 +35,7 @@ class User extends Authenticatable implements FilamentUser, HasName
         'age',
         'points',
         'rating',
-        'profile_pic'
+        'profile_pic',
     ];
 
     /**
@@ -91,6 +93,10 @@ class User extends Authenticatable implements FilamentUser, HasName
     }
 
     public function getFilamentName(): string
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+    public function getFullNameAttribute()
     {
         return "{$this->first_name} {$this->last_name}";
     }
