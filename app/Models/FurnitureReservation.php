@@ -16,7 +16,7 @@ class FurnitureReservation extends Model
       'end_date',
       'cost'
     ];
-    public function forniture(){
+    public function furniture(){
         return $this->belongsTo(Furniture::class);
     }
     public function event(){
