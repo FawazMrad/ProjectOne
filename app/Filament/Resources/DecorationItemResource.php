@@ -30,7 +30,7 @@ class DecorationItemResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(100),
-                Forms\Components\Select::make('category_id')
+                Forms\Components\Select::make('decoration_category_id')
                     ->relationship(name: 'decorationCategory', titleAttribute: 'name')
                     ->label('Category')
                     ->searchable()

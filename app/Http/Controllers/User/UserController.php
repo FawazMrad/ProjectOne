@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Helpers\DateTimeHelper;
+use App\Helpers\EventHelper;
 use App\Helpers\QR_CodeHelper;
 use App\Models\Friendship;
 use App\Models\User;
@@ -51,20 +52,28 @@ class UserController
         $user = $request->user();
         $userBirthDate=$user->birth_date;
         $age=DateTimeHelper::userAge($userBirthDate);
-        return response()->json(['user' => $user , 'age'=>$age], 200);
+        $userArray=$user->toArray();
+        $userArray+=['age'=>$age];
+        return response()->json(['user' => $userArray], 200);
     }
     public function getAttendedEvents(Request $request)
     {
         $user = $request->user();
+        $userId=$user->id;
         $attendedEvents = $user->attendees()
-            ->where('checked_id', true)->get();
-        if ($attendedEvents->inNotEmpty())
-            return response()->json(['AttendedEvents' => $attendedEvents], 200);
+            ->where('checked_in', true)->get();
+        if ($attendedEvents->isNotEmpty()) {
+            $filteredEvents = $attendedEvents->map(function ($filteredEvent) use ($userId) {
+                return EventHelper::putFavouriteStatusInEvent($filteredEvent, $userId);
+            });
+            return response()->json(['AttendedEvents' => $filteredEvents], 200);
+        }
         return response()->json(['message' => __('event.noSuchEvents')], 404);
     }
     public function eventsCreatedHistory(Request $request)
     {
         $user = $request->user();
+        $userId=$user->id;
         $currentDateTime = DateTimeHelper::getCurrentDateTime();
         $endDateTime = clone $currentDateTime;
         $endDateTime->modify('+6 days');
@@ -73,7 +82,10 @@ class UserController
             ->get();
 
         if ($events->isNotEmpty()) {
-            return response()->json(['createdEvents' => $events], 200);
+            $filteredEvents = $events->map(function ($filteredEvent) use ($userId) {
+                return EventHelper::putFavouriteStatusInEvent($filteredEvent, $userId);
+            });
+            return response()->json(['createdEvents' => $filteredEvents], 200);
         }
 
         return response()->json(['message' => __('event.noSuchEvents')], 404);
@@ -81,13 +93,17 @@ class UserController
     public function getCreatedUpdatableEvents(Request $request)
     {
         $user = $request->user();
+        $userId=$user->id;
         $currentDateTime = DateTimeHelper::getCurrentDateTime();
         $endDateTime = clone $currentDateTime;
         $endDateTime->modify('+6 days');
         $upComingEvents = $user->events()
             ->where('start_date', '>=', $endDateTime)->get();
         if ($upComingEvents->isNotEmpty()) {
-            return response()->json(['upComingEvents' => $upComingEvents], 200);
+            $filteredEvents = $upComingEvents->map(function ($filteredEvent) use ($userId) {
+                return EventHelper::putFavouriteStatusInEvent($filteredEvent, $userId);
+            });
+            return response()->json(['upComingEvents' => $filteredEvents], 200);
         }
 
         return response()->json(['message' => __('event.noSuchEvents')], 404);

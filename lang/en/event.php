@@ -38,4 +38,5 @@ return [
     'rateDone'=>'Rate was sent successfully',
     'alreadyRated'=>'This user already rate this event',
     'NoFav'=>'There are no events in your favourite',
+    'notPaid'=>'This event is not paid',
 ];

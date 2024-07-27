@@ -20,6 +20,7 @@ use App\Models\VenueReservation;
 use App\Models\Wallet;
 use DateTime;
 use Exception;
+use http\Env\Response;
 use Illuminate\Support\Facades\DB;
 use LanguageDetection\Language;
 use Illuminate\Http\Request;
@@ -36,46 +37,19 @@ class EventController extends Controller
         $user = $request->user();
         $userId = $user->id;
 
-        $validatedData = $request->validate([
-            'categoryId' => 'required|exists:categories,id',
-            'title' => 'required|string|max:100',
-            'description' => 'required|string',
-            'minAge' => 'required|integer|min:0',
-            'isPaid' => 'required|boolean',
-            'isPrivate' => 'required|boolean',
-            'attendanceType' => 'required|in:INVITATION,TICKET',
-            'image' => 'nullable|string',
-            'startDate' => 'required|date',
-            'endDate' => 'required|date|after_or_equal:startDate',
-        ]);
+        $validatedData = $request->validate(['categoryId' => 'required|exists:categories,id', 'title' => 'required|string|max:100', 'description' => 'required|string', 'minAge' => 'required|integer|min:0', 'isPaid' => 'required|boolean', 'isPrivate' => 'required|boolean', 'attendanceType' => 'required|in:INVITATION,TICKET', 'image' => 'nullable|string', 'startDate' => 'required|date', 'endDate' => 'required|date|after_or_equal:startDate',]);
 
         // Translate the description
         try {
             $validatedData = TranslationHelper::descriptionAndTranslatedDescription($validatedData);
         } catch (Exception $e) {
-            return response()->json([
-                'message' => __('event.errorIncompleteStepOne'),
-                'error' => $e->getMessage()
-            ], 400);
+            return response()->json(['message' => __('event.errorIncompleteStepOne'), 'error' => $e->getMessage()], 400);
         }
 
         DB::beginTransaction();
         try {
             // Create the event
-            $event = Event::create([
-                'user_id' => $userId,
-                'category_id' => $validatedData['categoryId'],
-                'title' => $validatedData['title'],
-                'description_ar' => $validatedData['description_ar'],
-                'description_en' => $validatedData['description_en'],
-                'min_age' => $validatedData['minAge'],
-                'is_paid' => $validatedData['isPaid'],
-                'is_private' => $validatedData['isPrivate'],
-                'attendance_type' => $validatedData['attendanceType'],
-                'image' => $validatedData['image'],
-                'start_date' => $validatedData['startDate'],
-                'end_date' => $validatedData['endDate'],
-            ]);
+            $event = Event::create(['user_id' => $userId, 'category_id' => $validatedData['categoryId'], 'title' => $validatedData['title'], 'description_ar' => $validatedData['description_ar'], 'description_en' => $validatedData['description_en'], 'min_age' => $validatedData['minAge'], 'is_paid' => $validatedData['isPaid'], 'is_private' => $validatedData['isPrivate'], 'attendance_type' => $validatedData['attendanceType'], 'image' => $validatedData['image'], 'start_date' => $validatedData['startDate'], 'end_date' => $validatedData['endDate'],]);
 
             $data['id'] = $event->id;
             $data['Description_ar'] = $event->description_ar;
@@ -86,25 +60,17 @@ class EventController extends Controller
             if ($event) {
                 EventHelper::changeUserRating($user, 0.2);
                 QR_CodeHelper::generateAndSaveQrCode($data, $modelName);
-                return response()->json([
-                    'message' => __('event.completeStepOne'),
-                    'event' => $event
-                ], 201);
+                return response()->json(['message' => __('event.completeStepOne'), 'event' => $event], 201);
             }
 
-            return response()->json([
-                'message' => __('event.errorIncompleteStepOne'),
-                'event' => $event->id,
-            ], 400);
+            return response()->json(['message' => __('event.errorIncompleteStepOne'), 'event' => $event->id,], 400);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'message' => __('event.errorIncompleteStepOne'),
-                'error' => $e->getMessage()
-            ], 400);
+            return response()->json(['message' => __('event.errorIncompleteStepOne'), 'error' => $e->getMessage()], 400);
         }
     }
+
     public function storeStep2(Request $request)
     {
         $totalCost = 0;
@@ -207,10 +173,7 @@ class EventController extends Controller
         $regularTicketPrice = $numberOfRegularChairs > 0 ? ($totalCost * $regularRate) / $numberOfRegularChairs : 0;
         $vipTicketPrice = $numberOfVipChairs > 0 ? ($totalCost * $vipRate) / $numberOfVipChairs : 0;
 
-        return [
-            'regularTicketPrice' => $regularTicketPrice,
-            'vipTicketPrice' => $vipTicketPrice,
-        ];
+        return ['regularTicketPrice' => $regularTicketPrice, 'vipTicketPrice' => $vipTicketPrice,];
     }
 
     public function remove(Request $request)
@@ -247,10 +210,13 @@ class EventController extends Controller
     {
         $eventId = $request->input('eventId');
         $event = Event::find($eventId);
-        $regularTicketPrice = $event->ticket_price;
-        $vipTicketPrice = $event->vip_ticket_price;
-        $totalCost = $event->total_cost;
-        return response()->json(['totalCost' => $totalCost, 'regularTicketPrice' => $regularTicketPrice, 'vipTicketPrice' => $vipTicketPrice], 200);
+        if ($event->is_paid) {
+            $regularTicketPrice = $event->ticket_price;
+            $vipTicketPrice = $event->vip_ticket_price;
+            $totalCost = $event->total_cost;
+            return response()->json(['totalCost' => $totalCost, 'regularTicketPrice' => $regularTicketPrice, 'vipTicketPrice' => $vipTicketPrice], 200);
+        }
+        return response()->json(['message' => __('event.notPaid')], 400);
     }
 
     public function adjustPrices(Request $request)
@@ -278,7 +244,7 @@ class EventController extends Controller
                 $event->save();
                 return response()->json(['message' => __('event.priceAdjustSuccess')], 200);
             }
-
+            return response()->json(['message' => __('event.notPaid')], 400);
         }
     }
 
@@ -493,7 +459,7 @@ class EventController extends Controller
                 $cost = ResourcesHelper::getCost($modelName, $newItem['id'], 1);
                 $withdrawResult = WalletController::withdraw($ownerId, $cost);
                 if ($withdrawResult['status'] === false) //user cannot pay return response()->json(['withdraw error' => $withdrawResult['message']], 400);
-                $reservationData = ['eventId' => $eventId, $modelNameId => $newItem['id'], 'startDate' => $newItem['newStartDate'], 'endDate' => $newItem['newEndDate'], 'cost' => $cost,];
+                    $reservationData = ['eventId' => $eventId, $modelNameId => $newItem['id'], 'startDate' => $newItem['newStartDate'], 'endDate' => $newItem['newEndDate'], 'cost' => $cost,];
                 if ($type === 'venue') {
                     $reservationData = ['start_date' => $dates['startDate'], 'end_date' => $dates['endDate']];
                 }
@@ -529,9 +495,12 @@ class EventController extends Controller
         if ($events->isNotEmpty()) {
             $filteredEvents = EventHelper::filterEventsByBlockedFriendships($events, $user);
             if ($filteredEvents) {
+                $filteredEvents = $filteredEvents->map(function ($filteredEvent) use ($userId) {
+                    return EventHelper::putFavouriteStatusInEvent($filteredEvent, $userId);
+                });
                 return response()->json(['events' => $filteredEvents->values()], 200);
             }
-            return response()->json(['events' => __('event.suchEvents')], 404);
+            return response()->json(['events' => __('event.noSuchEvents')], 404);
         }
 
         return response()->json(['events' => __('event.noSuchEvents')], 404);
@@ -592,31 +561,40 @@ class EventController extends Controller
             $filteredEvents = EventHelper::filterEventsByBlockedFriendships($events, $user);
 
             if ($filteredEvents) {
-               return response()->json(['events' => $filteredEvents->values()], 200);
+                return response()->json(['events' => $filteredEvents->values()], 200);
             }
             return response()->json(['events' => __('event.noSuchEvents')], 404);
         }
         return response()->json(['events' => __('event.noSuchEvents')], 404);
     }
-   public function searchEventsByQR(Request $request){
-        $user=$request->user();
-        $eventId=$request->input('eventId');
-        $event=Event::find($eventId);
-        $filteredEvent=EventHelper::filterEventsByBlockedFriendships($event,$user);
-        if(count($filteredEvent)>0)
-            return response()->json(['event'=>$filteredEvent],200);
-            return response()->json(['message'=>__('event.noSuchEvents')],404);
-   }
+
+    public function searchEventsByQR(Request $request)
+    {
+        $user = $request->user();
+        $eventId = $request->input('eventId');
+        $event = Event::find($eventId);
+        $filteredEvent = EventHelper::filterEventsByBlockedFriendships($event, $user);
+        if (count($filteredEvent) > 0) return response()->json(['event' => $filteredEvent], 200);
+        return response()->json(['message' => __('event.noSuchEvents')], 404);
+    }
+
     public function mostPopularEvents(Request $request)
     {
         $user = $request->user();
         $userId = $user->id;
-        $events = Event::select('events.*', 'users.rating as creator_rating')->join('users', 'events.user_id', '=', 'users.id')->where('is_private', false)->orderBy('users.rating', 'desc')->take(10)->get();
+        $events = Event::select('events.*', 'users.rating as creator_rating')
+            ->join('users', 'events.user_id', '=', 'users.id')
+            ->where('is_private', false)
+            ->orderBy('users.rating', 'desc')
+            ->take(10)->get();
 
         if ($events) {
             $filteredEvents = EventHelper::filterEventsByBlockedFriendships($events, $user);
 
             if ($filteredEvents) {
+                $filteredEvents = $filteredEvents->map(function ($filteredEvent) use ($userId) {
+                    return EventHelper::putFavouriteStatusInEvent($filteredEvent, $userId);
+                });
                 return response()->json(['events' => $filteredEvents->values()], 200);
             }
             return response()->json(['events' => __('event.noPopularEvents')], 404);
@@ -642,7 +620,7 @@ class EventController extends Controller
             if ($friendship && $friendship->status === 'BLOCKED') {
                 return response()->json(['message' => __('event.eventNotFound')], 404);
             }
-
+            $event = EventHelper::putFavouriteStatusInEvent($event, $userId);
             return response()->json(['event' => $event], 200);
         }
 

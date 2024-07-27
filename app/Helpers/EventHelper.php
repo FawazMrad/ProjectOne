@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 use App\Models\Attendee;
 use App\Models\Event;
+use App\Models\Favourite;
 use App\Models\Friendship;
 use App\Models\VenueReservation;
 use Carbon\Carbon;
@@ -12,20 +13,19 @@ use DateTime;
 
 class EventHelper
 {
-//    public static function filterEventsByBlockedFriendships($events, $user)
-//    {
-//        $filteredEvents = $events->filter(function ($event) use ($user) {
-//        $eventCreator = $event->user()->first();
-//        $friendship = Friendship::where(function ($query) use ($user, $eventCreator) {
-//            $query->where('sender_id', $user->id)->where('receiver_id', $eventCreator->id);
-//        })->orWhere(function ($query) use ($user, $eventCreator) {
-//            $query->where('sender_id', $eventCreator->id)->where('receiver_id', $user->id);
-//        })->first();
-//
-//        return !$friendship || $friendship->status !== 'BLOCKED';
-//    });
-//return $filteredEvents;
-//}
+public static function getFavouriteStatus($eventId,$userId){
+    $isFavourite=Favourite::where('user_id',$userId)
+        ->where('event_id',$eventId)->first();
+    if($isFavourite)
+        return true;
+    return  false;
+}
+public static function putFavouriteStatusInEvent($event,$userId){
+    $favouriteStatus=self::getFavouriteStatus($event->id,$userId);
+    $eventArray=$event->toArray();
+    $eventArray+=['isFavourite'=>$favouriteStatus];
+    return $eventArray;
+}
     public static function filterEventsByBlockedFriendships($events, $user)
     {
         // Initialize filtered events as an empty collection or array
