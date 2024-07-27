@@ -9,7 +9,7 @@ class DecorationItem extends Model
 {
     use HasFactory;
     protected $fillable=[
-        'category_id',
+        'decoration_category_id',
         'name',
         'image',
         'description_en',

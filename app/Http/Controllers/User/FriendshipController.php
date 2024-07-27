@@ -111,7 +111,7 @@ class FriendshipController
         $userId = $request->user()->id;
         // Get followers
         $followers = Friendship::with(['sender' => function ($query) {
-            $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number', 'age', 'points', 'rating', 'profile_pic');
+            $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number',  'points', 'rating', 'profile_pic');
         }])
             ->where('receiver_id', $userId)
             ->where('status', 'FOLLOWING')
@@ -123,7 +123,7 @@ class FriendshipController
 
 
         $mutualFriends = Friendship::with(['receiver' => function ($query) {
-            $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number', 'age', 'points', 'rating', 'profile_pic');
+            $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number',  'points', 'rating', 'profile_pic');
         }])
             ->where('sender_id', $userId)
             ->where('status', 'MUTUAL')
@@ -141,7 +141,7 @@ class FriendshipController
         $userId = $request->user()->id;
         // Get followers
         $following = Friendship::with(['receiver' => function ($query) {
-            $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number', 'age', 'points', 'rating', 'profile_pic');
+            $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number',  'points', 'rating', 'profile_pic');
         }])
             ->where('sender_id', $userId)
             ->where('status', 'FOLLOWING')
@@ -153,7 +153,7 @@ class FriendshipController
 
         // Get mutual friends
         $mutualFriends = Friendship::with(['sender' => function ($query) {
-            $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number', 'age', 'points', 'rating', 'profile_pic');
+            $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number',  'points', 'rating', 'profile_pic');
         }])
             ->where('receiver_id', $userId)
             ->where('status', 'MUTUAL')
@@ -184,7 +184,7 @@ class FriendshipController
         }
         $blockedUsersData = [];
         foreach ($filteredBlockedUsersId as $userId) {
-            $user = User::select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number', 'age', 'points', 'rating', 'profile_pic')
+            $user = User::select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number', 'points', 'rating', 'profile_pic')
                 ->find($userId);
             if ($user) {
                 $blockedUsersData[] = $user;

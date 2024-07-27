@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 use Illuminate\Support\Facades\App;
 use Stichoza\GoogleTranslate\GoogleTranslate;
+use Exception;
 
 class TranslationHelper
 {
@@ -29,11 +30,10 @@ class TranslationHelper
 
             return $data;
         } catch (\Exception $e) {
-            $data['description_en'] = 'Translation failed: ' . $e->getMessage();
-            $data['description_ar'] = 'Translation failed: ' . $e->getMessage();
+            throw new Exception('Translation failed: ' . $e->getMessage());
         }
 
-        return $data;
+
         }
 
 

@@ -6,6 +6,10 @@ use App\Models\Wallet;
 
 class WalletHelper
 {
+    public static function getFactor(){
+        $factor=10;
+        return $factor;
+    }
   public static function createWallet($user_id){
       Wallet::create([
           'user_id'=>$user_id,

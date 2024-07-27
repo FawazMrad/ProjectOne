@@ -128,5 +128,22 @@ class WalletController extends Controller
 
         return response()->json($result);
     }
+    public function getUserPointsWithFactor(Request $request){
+        $user=$request->user();
+        $userPoints=$user->points;
+        $factor=WalletHelper::getFactor();
+        return response()->json(['points'=>$userPoints,'factor'=>$factor],200);
+    }
+    public function exchangePoints (Request $request){
+        $pointsToExchange=$request->input('points');
+        $factor=WalletHelper::getFactor();
+        $amount=$pointsToExchange * $factor;
+        $user=$request->user();
+        $userId=$user->id;
+        $user->points-=$pointsToExchange;
+        $depositResult= self::depositStatic(1, $userId, $amount);
+        $user->save();
+        return response()->json(['message'=>$depositResult['message'],'amount'=>$amount],200);
+    }
 
 }

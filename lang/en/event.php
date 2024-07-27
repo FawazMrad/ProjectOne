@@ -37,4 +37,5 @@ return [
     'noPopularEvents'=>'There are no most popular events till now',
     'rateDone'=>'Rate was sent successfully',
     'alreadyRated'=>'This user already rate this event',
+    'NoFav'=>'There are no events in your favourite',
 ];

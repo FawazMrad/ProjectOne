@@ -96,7 +96,7 @@ class ResourceController extends Controller
         $availableResources[$resourceSmallLetter . '_items'][] = [
             'item' => [
                 'id' => $item->id,
-                'category_id' => $item->category_id,
+                'decoration_category_id' => $item->category_id,
                 'name' => $item->name,
                 'image' => $item->image,
                 'description' => $item->{'description_' . app()->getLocale()},

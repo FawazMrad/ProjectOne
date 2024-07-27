@@ -7,6 +7,12 @@ use DateTime;
 
 class DateTimeHelper
 {
+    public static function userAge($userBirthDate,){
+        $birthDate = new DateTime($userBirthDate);
+        $currentDate = self::getCurrentDateTime();
+        $age = $currentDate->diff($birthDate)->y;
+        return $age;
+    }
   public static function getCurrentDateTime(){
 
       return new \DateTime( Carbon::now());

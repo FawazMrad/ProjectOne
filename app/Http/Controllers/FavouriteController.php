@@ -83,10 +83,13 @@ class FavouriteController
             $userFavourites = $user->favourites()->with('event')->get();
         }
         $favouritesByPriority=FavouriteHelper::getEventByTheirPriorityLevel($userFavourites);
-        return response()->json([
-            'highPriorityEvents' => $favouritesByPriority['highPriorityEvents'],
-            'midPriorityEvents' => $favouritesByPriority['midPriorityEvents']
-        ], 200);
+        if($favouritesByPriority['status']) {
+            return response()->json([
+                'highPriorityEvents' => $favouritesByPriority['highPriorityEvents'],
+                'midPriorityEvents' => $favouritesByPriority['midPriorityEvents']
+            ], 200);
+        }
+        return response()->json(['message'=>$favouritesByPriority['message']],404);
            }
 
 
