@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('email', 100)->unique();
             $table->string('password', 255);
             $table->text('address', 255)->nullable();
-            $table->string('phone_number', 20)->nullable();
+            $table->string('phone_number', 20)->nullable()->unique();
             $table->date('birth_date')->nullable();
             $table->integer('points')->default(0);
             $table->float('rating')->default(0);

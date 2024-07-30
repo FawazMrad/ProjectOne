@@ -20,11 +20,16 @@ class AttendeeController
     public function sendInvitation(Request $request)
     {
         $userId = $request->input('userId');
+        $user = User::find($userId);
         $eventId = $request->input('eventId');
         $event = Event::find($eventId);
+        $userAge = DateTimeHelper::userAge($user->birth_date);
+        if ($userAge < $event->min_age) {
+            return response()->json(['message' => __('auth.userUnderAge')], 400);
+        }
         $dates = EventHelper::getEventDates($eventId);
 
-        if ($dates['dateDifference']->days <=1) {
+        if ($dates['dateDifference']->days <= 1) {
             return response()->json(['message' => __('event.CannotInviteNow')], 400);
         }
 
@@ -108,13 +113,17 @@ class AttendeeController
 
     public function purchaseTicket(Request $request)
     {
-        $userId = $request->user()->id;
+        $user = $request->user();
+        $userId = $user->id;
         $eventId = $request->input('eventId');
-        $isUserAttend=Attendee::where('user_id',$userId)
-            ->where('event_id',$eventId)->first();
-        if($isUserAttend)
-        if($isUserAttend->status!=='CANCELLED')
-            return response()->json(['message'=>__('event.userAlreadyAttend')],400);
+        $event = Event::find($eventId);
+        $userAge = DateTimeHelper::userAge($user->birth_date);
+        if ($userAge < $event->min_age) {
+            return response()->json(['message' => __('auth.userUnderAge')], 400);
+        }
+
+        $isUserAttend = Attendee::where('user_id', $userId)->where('event_id', $eventId)->first();
+        if ($isUserAttend) if ($isUserAttend->status !== 'CANCELLED') return response()->json(['message' => __('event.userAlreadyAttend')], 400);
         $dates = EventHelper::getEventDates($eventId);
         if ($dates['dateDifference']->days > 5) {
             return response()->json(['message' => __('event.CannotPurchaseNow')], 400);
@@ -134,15 +143,7 @@ class AttendeeController
             $venueReservation = $event->venueReservation()->first();
             $seatNumber = EventHelper::generateSeatNumber($eventId, $ticketType, $venueReservation);
 
-            $attendee = Attendee::create(['user_id' => $userId,
-                'event_id' => $eventId,
-                'status' => $status,
-                'purchase_date' => $purchaseDate,
-                'ticket_price' => $ticketPrice,
-                'ticket_type' => $ticketType,
-                'seat_number' => $seatNumber,
-                'discount' => 0,
-                'qr_code' => 'still without qr']);
+            $attendee = Attendee::create(['user_id' => $userId, 'event_id' => $eventId, 'status' => $status, 'purchase_date' => $purchaseDate, 'ticket_price' => $ticketPrice, 'ticket_type' => $ticketType, 'seat_number' => $seatNumber, 'discount' => 0, 'qr_code' => 'still without qr']);
             $attendee->save();
             $qrData = ['id' => $attendee->id, 'userId' => $userId, 'eventId' => $eventId, 'seatNumber' => $seatNumber];
             $qrCode = QR_CodeHelper::generateAndSaveQrCode($qrData, 'Attendee');
@@ -178,10 +179,8 @@ class AttendeeController
         $userId = $user->id;
         $attendeeId = $request->input('attendeeId');
         $attendee = Attendee::find($attendeeId);
-        if($attendee->status==='CANCELLED')
-            return \response()->json(['message'=>__('event.AlreadyCancelled')],400);
-        if($attendee->status!='Purchased')
-            return \response()->json(['message'=>__('event.AlreadyCancelled')],400);
+        if ($attendee->status === 'CANCELLED') return \response()->json(['message' => __('event.AlreadyCancelled')], 400);
+        if ($attendee->status != 'Purchased') return \response()->json(['message' => __('event.AlreadyCancelled')], 400);
         $event = $attendee->event()->first();
         if ($event->is_paid) {
             WalletController::refund($userId, $event->user_id, $attendee->ticket_price);
@@ -198,21 +197,5 @@ class AttendeeController
         $user->save();
         return response()->json(['message' => __('event.cancelTicket')], 201);
     }
-    public function checkIn(Request $request){
-        $userId=$request->input('userId');
-        $user=User::find($userId);
-        $attendeeId=$request->input('attendeeId');
-        $attendee=Attendee::find($attendeeId);
-        if($attendee->status==='ATTENDING')
-            return \response()->json(['message'=>__('event.userAlreadyCheckedIn')],400);
-        if($attendee->status!='PURCHASED')
-            return \response()->json(['message'=>__('event.checkedInNotPurchased')],400);
-        $attendee->checked_in=true;
-        $attendee->status='ATTENDING';
-        $attendee->save();
-        EventHelper::changeUserRating($user,0.1);
-        return \response()->json(['message'=>__('event.checkedIn')],200);
 
-
-    }
 }

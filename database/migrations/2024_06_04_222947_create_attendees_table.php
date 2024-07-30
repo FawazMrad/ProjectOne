@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');;
             $table->foreignId('event_id')->references('id')->on('events');
-            $table->enum('status', ['INVITED', 'ATTENDING', 'PURCHASED', 'CANCELLED']);
+            $table->enum('status', ['INVITED', 'ATTENDING', 'PURCHASED', 'CANCELLED','CREATOR']);
             $table->boolean('checked_in')->default(false);
             $table->dateTime('purchase_date')->nullable();
             $table->decimal('ticket_price', 10, 2)->default(0);
@@ -23,6 +23,8 @@ return new class extends Migration
             $table->string('seat_number', 20)->nullable();
             $table->decimal('discount', 10, 2)->default(0);
             $table->text('qr_code', 255);
+            $table->boolean('is_main_scanner')->default(false);
+            $table->boolean('is_scanner')->default(false);
             $table->timestamps();
         });
     }

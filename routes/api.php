@@ -5,6 +5,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\FavouriteController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ResourceController;
+use App\Http\Controllers\ScannerController;
 use App\Http\Controllers\StationController;
 use App\Http\Controllers\User\AuthController;
 use App\Http\Controllers\User\FriendshipController;
@@ -90,7 +91,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/attendees/cancelInvitation', [AttendeeController::class, 'cancelInvitation']);//for cancel the invitation
     Route::post('/attendees/purchaseTicket', [AttendeeController::class, 'purchaseTicket']);//for purchase Tickets
     Route::post('/attendees/cancelTicket', [AttendeeController::class, 'cancelTicket']);//for cancel Tickets
-    Route::post('/attendees/checkIn', [AttendeeController::class, 'checkIn']);//for check in Tickets
+    Route::post('/attendees/checkIn', [ScannerController::class, 'checkIn']);//for check in Tickets
+    Route::post('/attendees/makeScanner', [ScannerController::class, 'makeScanner']);//for make scanners
 //for profile
     Route::get('/users/getProfile', [UserController::class, 'getProfile']);//for getProfile
     Route::get('/users/getAttendedEvents', [UserController::class, 'getAttendedEvents']);//for getAttended Events

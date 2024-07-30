@@ -30,6 +30,7 @@ return [
     'userAlreadyAttend'=>'This user already attended',
     'AlreadyCancelled'=>'This user already cancelled his ticket',
     'checkedIn'=>'Checked you in done successfully and your rating increased 0.1',
+    'checkedIn'=>'Checked you in done successfully and your rating increased 0.2',
     'checkedInNotPurchased'=>'This user does not have a ticket',
     'userAlreadyCheckedIn'=>'This user already was check in',
     'noSuchEvents'=>'There are no such events right now',
@@ -39,4 +40,5 @@ return [
     'alreadyRated'=>'This user already rate this event',
     'NoFav'=>'There are no events in your favourite',
     'notPaid'=>'This event is not paid',
+    'exceedCapacity'=>'The selected furniture exceeds the venue capacity',
 ];

@@ -37,21 +37,30 @@ class EventController extends Controller
         $user = $request->user();
         $userId = $user->id;
 
-        $validatedData = $request->validate(['categoryId' => 'required|exists:categories,id', 'title' => 'required|string|max:100', 'description' => 'required|string', 'minAge' => 'required|integer|min:0', 'isPaid' => 'required|boolean', 'isPrivate' => 'required|boolean', 'attendanceType' => 'required|in:INVITATION,TICKET', 'image' => 'nullable|string', 'startDate' => 'required|date', 'endDate' => 'required|date|after_or_equal:startDate',]);
+        $validatedData = $request->validate(['categoryId' => 'required|exists:categories,id',
+            'title' => 'required|string|max:100',
+            'description' => 'required|string',
+            'minAge' => 'required|integer|min:0',
+            'isPaid' => 'required|boolean',
+            'isPrivate' => 'required|boolean',
+            'attendanceType' => 'required|in:INVITATION,TICKET',
+            'image' => 'nullable|string',
+            'startDate' => 'required|date',
+            'endDate' => 'required|date|after_or_equal:startDate']);
 
         // Translate the description
         try {
             $validatedData = TranslationHelper::descriptionAndTranslatedDescription($validatedData);
         } catch (Exception $e) {
-            return response()->json(['message' => __('event.errorIncompleteStepOne'), 'error' => $e->getMessage()], 400);
+            return response()->json(['message' => __('event.errorIncompleteStepOne'), 'error' => $e->getMessage()], 500);
         }
 
         DB::beginTransaction();
         try {
             // Create the event
             $event = Event::create(['user_id' => $userId, 'category_id' => $validatedData['categoryId'], 'title' => $validatedData['title'], 'description_ar' => $validatedData['description_ar'], 'description_en' => $validatedData['description_en'], 'min_age' => $validatedData['minAge'], 'is_paid' => $validatedData['isPaid'], 'is_private' => $validatedData['isPrivate'], 'attendance_type' => $validatedData['attendanceType'], 'image' => $validatedData['image'], 'start_date' => $validatedData['startDate'], 'end_date' => $validatedData['endDate'],]);
-
             $data['id'] = $event->id;
+            $data['eventId'] = $event->id;
             $data['Description_ar'] = $event->description_ar;
             $data['Description_en'] = $event->description_en;
             $modelName = 'Event';
@@ -60,7 +69,9 @@ class EventController extends Controller
             if ($event) {
                 EventHelper::changeUserRating($user, 0.2);
                 QR_CodeHelper::generateAndSaveQrCode($data, $modelName);
-                return response()->json(['message' => __('event.completeStepOne'), 'event' => $event], 201);
+                $eventArray=$event->toArray();
+                $eventArray+=['eventId'=>$event->id];
+                return response()->json(['message' => __('event.completeStepOne'), 'event' => $eventArray], 201);
             }
 
             return response()->json(['message' => __('event.errorIncompleteStepOne'), 'event' => $event->id,], 400);
@@ -73,6 +84,8 @@ class EventController extends Controller
 
     public function storeStep2(Request $request)
     {
+        $user=$request->user();
+        $userId=$user->id;
         $totalCost = 0;
         $eventId = $request->input('eventId');
         $event = Event::find($eventId);
@@ -86,6 +99,16 @@ class EventController extends Controller
         $foodInfo = $request->input('Food', []);
         $drinkInfo = $request->input('Drink', []);
 
+        if($furnitureInfo) {
+            $data=EventHelper::checkIfVenueCanContainSelectedChairs($furnitureInfo, $venueInfo['id']);
+            if($data['status']===false){
+                return \response()->json(['message' => __('event.exceedCapacity'),
+                    'vipChairsSelected' => $data['vipChairsSelected'],
+                    'regularChairsSelected' => $data['regularChairsSelected'],
+                    'maxNumberOfRegularChairs'=>$data['maxNumberOfRegularChairs'],
+                    'maxNumberOfVipChairs'=>$data['maxNumberOfVipChairs']],$data['statusCode']);
+            }
+        }
 
         $venueCost = ResourcesHelper::getCost('Venue', $venueInfo['id'], 1);
         $totalCost += $venueCost;
@@ -145,8 +168,10 @@ class EventController extends Controller
         $ownerId = $event->user_id;
         if ($event) {
             $withdrawResult = WalletController::withdraw($ownerId, $totalCost);
-            if ($withdrawResult['status'] === true) return response()->json(['message' => __('event.completeStepTow'), 'event' => $event], 201);
-            return response()->json(['message' => __('event.errorIncompleteStepTow'), 'withdraw error' => $withdrawResult['message']], 201);
+            if ($withdrawResult['status'] === true) {
+                EventHelper::makeAttendeeForEventCreator($userId,$eventId);
+                return response()->json(['message' => __('event.completeStepTow'), 'event' => $event], 201);
+            }return response()->json(['message' => __('event.errorIncompleteStepTow'), 'withdraw error' => $withdrawResult['message']], 201);
         }
         return response()->json(['message' => __('event.errorIncompleteStepTow')], 400);
     }

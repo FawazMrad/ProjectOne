@@ -22,5 +22,9 @@ return [
     'preferencesAdjustSuccessfully'=>'your preferences adjusted successfully',
     'userNotFound'=>'We cannot find this user',
     'resetPassword'=>'Your password was reset successfully',
-
+    'userUnderAge'=>'This user age is under the min required age',
+    'notAttendee'=>'This user does not have privileges in this event',
+    'alreadyScanner'=>'This user is already scanner for this event',
+    'notMainScanner'=>'This User is not the main scanner for this event',
+     'newScanner'=>'Now this user is a scanner for your event and his/her rating increased by 0.3',
 ];

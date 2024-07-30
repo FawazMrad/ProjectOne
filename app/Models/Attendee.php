@@ -18,7 +18,9 @@ class Attendee extends Model
         'ticket_type',
         'seat_number',
         'discount',
-        'qr_code'
+        'qr_code',
+        'is_main_scanner',
+        'is_scanner'
     ];
     public function user()
     {

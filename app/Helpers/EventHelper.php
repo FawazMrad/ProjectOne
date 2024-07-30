@@ -6,26 +6,95 @@ use App\Models\Attendee;
 use App\Models\Event;
 use App\Models\Favourite;
 use App\Models\Friendship;
+use App\Models\Furniture;
+use App\Models\Venue;
 use App\Models\VenueReservation;
 use Carbon\Carbon;
 use DateTime;
+use http\Env\Response;
 
 
 class EventHelper
 {
-public static function getFavouriteStatus($eventId,$userId){
-    $isFavourite=Favourite::where('user_id',$userId)
-        ->where('event_id',$eventId)->first();
-    if($isFavourite)
-        return true;
-    return  false;
-}
-public static function putFavouriteStatusInEvent($event,$userId){
-    $favouriteStatus=self::getFavouriteStatus($event->id,$userId);
-    $eventArray=$event->toArray();
-    $eventArray+=['isFavourite'=>$favouriteStatus];
-    return $eventArray;
-}
+    public static function isUserScanner($userId,$eventId){
+        $attendee=Attendee::where('user_id',$userId)
+            ->where('event_id',$eventId)
+            ->where('is_scanner',true)->first();
+        if($attendee)
+            return true;
+        return false;
+    }   public static function isUserMainScanner($userId,$eventId){
+        $attendee=Attendee::where('user_id',$userId)
+            ->where('event_id',$eventId)
+            ->where('is_main_scanner',true)->first();
+        if($attendee)
+            return true;
+        return false;
+    }
+    public static function makeAttendeeForEventCreator($creatorId,$eventId){
+        $attendee=Attendee::create([
+            'user_id'=>$creatorId,
+            'event_id'=>$eventId,
+            'status'=>'CREATOR',
+            'checked_in'=>true,
+            'purchase_date'=>DateTimeHelper::getCurrentDateTime(),
+            'ticket_price'=>0,
+            'ticket_type'=>'VIP',
+            'seat_number'=>'creator1',
+            'discount'=>0,
+            'qr_code'=>'not required',
+            'is_main_scanner'=>true,
+            'is_scanner'=>true
+        ]);
+        $attendee->save();
+    }
+
+    public static function checkIfVenueCanContainSelectedChairs($furnitureInfo, $venueId)
+    {
+        $venue = Venue::find($venueId);
+        $maxNumberOfRegularChairs = $venue->max_capacity_chairs;
+        $maxNumberOfVipChairs = $venue->vip_chairs;
+        $numberOfVipChairs = 0;
+        $numberOfRegularChairs = 0;
+
+        foreach ($furnitureInfo as $furniture) {
+            $furnitureObject = Furniture::find($furniture['id']);
+
+            if (!$furniture) {
+                continue;
+            }
+
+            if (stripos($furnitureObject->type, '_vipChair') !== false) {
+                $numberOfVipChairs += $furniture['quantity'];
+            } else if (stripos($furnitureObject->type, '_regularChair') !== false) {
+                $numberOfRegularChairs += $furniture['quantity'];
+            }
+        }
+
+        if ($numberOfVipChairs > $maxNumberOfVipChairs || $numberOfRegularChairs > $maxNumberOfRegularChairs) {
+            return $data = ['message' => __('event.exceedCapacity'), 'vipChairsSelected' => $numberOfVipChairs, 'regularChairsSelected' => $numberOfRegularChairs, 'maxNumberOfRegularChairs' => $maxNumberOfRegularChairs, 'maxNumberOfVipChairs' => $maxNumberOfVipChairs, 'statusCode' => 400, 'status' => false];
+
+        }
+
+        return $data = ['status' => true];
+
+    }
+
+    public static function putFavouriteStatusInEvent($event, $userId)
+    {
+        $favouriteStatus = self::getFavouriteStatus($event->id, $userId);
+        $eventArray = $event->toArray();
+        $eventArray += ['isFavourite' => $favouriteStatus];
+        return $eventArray;
+    }
+
+    public static function getFavouriteStatus($eventId, $userId)
+    {
+        $isFavourite = Favourite::where('user_id', $userId)->where('event_id', $eventId)->first();
+        if ($isFavourite) return true;
+        return false;
+    }
+
     public static function filterEventsByBlockedFriendships($events, $user)
     {
         // Initialize filtered events as an empty collection or array
@@ -171,10 +240,10 @@ public static function putFavouriteStatusInEvent($event,$userId){
         $statusUpper = ($status === 'invited') ? 'INVITED' : 'PURCHASED';
 
         $events = $user->attendees()->where('status', $statusUpper)->whereHas('event', function ($query) use ($firstDayOfCurrentMonth, $lastDayOfTwoMonthsAhead) {
-                $query->whereBetween('start_date', [$firstDayOfCurrentMonth, $lastDayOfTwoMonthsAhead]);
-            })->with(['event' => function ($query) {
-                $query->select('id', 'user_id', 'category_id', 'title', 'start_date', 'min_age', 'is_paid', 'is_private', 'image');
-            }])->get()->pluck('event'); // Extract only the event objects
+            $query->whereBetween('start_date', [$firstDayOfCurrentMonth, $lastDayOfTwoMonthsAhead]);
+        })->with(['event' => function ($query) {
+            $query->select('id', 'user_id', 'category_id', 'title', 'start_date', 'min_age', 'is_paid', 'is_private', 'image');
+        }])->get()->pluck('event'); // Extract only the event objects
 
         // Map events to add state attribute
         $events = $events->map(function ($event) use ($statusUpper) {
