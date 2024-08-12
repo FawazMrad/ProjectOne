@@ -7,6 +7,7 @@ use App\Helpers\EventHelper;
 use App\Helpers\QR_CodeHelper;
 use App\Models\Friendship;
 use App\Models\User;
+use Carbon\Carbon;
 use http\Env\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,53 +16,88 @@ use Illuminate\Support\Facades\Log;
 
 class UserController
 {
+    public function getInvitations(Request $request)
+    {
+        $user = $request->user();
+        $currentDateTime = Carbon::now();
+        $inviteType = $request->header('type');
+        switch ($inviteType) {
+            case 'INVITED':
+                $invitations = $user->attendees()->where('status', 'INVITED');
+                break;
+
+            case 'OTHER':
+                $invitations = $user->attendees()
+                    ->where(function($query) {
+                        $query->where('status', 'CANCELLED')
+                            ->orWhere('status', 'PURCHASED');
+                    });
+                break;
+
+        }
+            $invitations=$invitations->whereHas('event', function ($query) use ($currentDateTime) {
+                $query->where('start_date', '>=', $currentDateTime);
+            })->get(['id', 'status', 'event_id', 'qr_code', 'user_id', 'checked_in', 'purchase_date', 'ticket_price', 'seat_number', 'discount', 'is_main_scanner', 'is_scanner']);
+
+        if ($invitations->isNotEmpty()) {
+            return response()->json(['invitations' => $invitations], 200);
+        }
+
+        return response()->json(['message' => __('event.noInvitations')], 404);
+    }
+
     public function getUser(Request $request)
     {
         $user = $request->user();
-        $userBirthDate=$user->birth_date;
-        $fields = ['id', 'first_name', 'last_name', 'email', 'rating', 'qr_code', 'followers', 'following'];
+        $userBirthDate = $user->birth_date;
+        $fields = ['id', 'first_name', 'last_name', 'email', 'rating', 'qr_code', 'followers', 'following','created_at'];
         $desiredUser = User::select($fields)->find($request->input('userId'));
 
         if ($desiredUser) {
             $friendship = Friendship::where(function ($query) use ($user, $desiredUser) {
-                $query->where('sender_id', $user->id)
-                    ->where('receiver_id', $desiredUser->id);
+                $query->where('sender_id', $user->id)->where('receiver_id', $desiredUser->id);
             })->orWhere(function ($query) use ($user, $desiredUser) {
-                $query->where('sender_id', $desiredUser->id)
-                    ->where('receiver_id', $user->id);
+                $query->where('sender_id', $desiredUser->id)->where('receiver_id', $user->id);
             })->first();
 
-            $friendshipStatus = 'NOT_FOLLOWING'; // Default status
+            $friendshipStatus = 'NOT_FOLLOWING';
 
             if ($friendship) {
                 if ($friendship->status == 'BLOCKED') {
-                    $friendshipStatus = 'blocked';
-                } elseif (($friendship->status == 'FOLLOWING' && $friendship->sender_id===$user->id) || $friendship->status == 'MUTUAL') {
+                    $friendshipStatus = 'BLOCKED';
+                    return response()->json(['message' => 'User not found'], 404);
+                } elseif (($friendship->status == 'FOLLOWING' && $friendship->sender_id === $user->id) ) {
                     $friendshipStatus = 'FOLLOWING';
+                }elseif( $friendship->status == 'MUTUAL'){
+                    $friendshipStatus = 'MUTUAL';
                 }
 
             }
-            $age=DateTimeHelper::userAge($userBirthDate);
-            return response()->json(['user' => $desiredUser, 'friendship_status' => $friendshipStatus,'age'=>$age], 200);
+            $age = DateTimeHelper::userAge($userBirthDate);
+            $userArray=$desiredUser->toArray();
+            $userArray+=['friendShipStatus'=>$friendshipStatus];
+            $userArray+=['age'=>$age];
+            return response()->json(['user' => $userArray], 200);
         }
 
         return response()->json(['message' => 'User not found'], 404);
     }
+
     public function getProfile(Request $request)
     {
         $user = $request->user();
-        $userBirthDate=$user->birth_date;
-        $age=DateTimeHelper::userAge($userBirthDate);
-        $userArray=$user->toArray();
-        $userArray+=['age'=>$age];
+        $userBirthDate = $user->birth_date;
+        $age = DateTimeHelper::userAge($userBirthDate);
+        $userArray = $user->toArray();
+        $userArray += ['age' => $age];
         return response()->json(['user' => $userArray], 200);
     }
+
     public function getAttendedEvents(Request $request)
     {
         $user = $request->user();
-        $userId=$user->id;
-        $attendedEvents = $user->attendees()
-            ->where('checked_in', true)->get();
+        $userId = $user->id;
+        $attendedEvents = $user->attendees()->where('checked_in', true)->get();
         if ($attendedEvents->isNotEmpty()) {
             $filteredEvents = $attendedEvents->map(function ($filteredEvent) use ($userId) {
                 return EventHelper::putFavouriteStatusInEvent($filteredEvent, $userId);
@@ -70,16 +106,15 @@ class UserController
         }
         return response()->json(['message' => __('event.noSuchEvents')], 404);
     }
+
     public function eventsCreatedHistory(Request $request)
     {
         $user = $request->user();
-        $userId=$user->id;
+        $userId = $user->id;
         $currentDateTime = DateTimeHelper::getCurrentDateTime();
         $endDateTime = clone $currentDateTime;
         $endDateTime->modify('+6 days');
-        $events = $user->events()
-            ->where('start_date', '<', $endDateTime)
-            ->get();
+        $events = $user->events()->where('start_date', '<', $endDateTime)->get();
 
         if ($events->isNotEmpty()) {
             $filteredEvents = $events->map(function ($filteredEvent) use ($userId) {
@@ -90,15 +125,15 @@ class UserController
 
         return response()->json(['message' => __('event.noSuchEvents')], 404);
     }
+
     public function getCreatedUpdatableEvents(Request $request)
     {
         $user = $request->user();
-        $userId=$user->id;
+        $userId = $user->id;
         $currentDateTime = DateTimeHelper::getCurrentDateTime();
         $endDateTime = clone $currentDateTime;
         $endDateTime->modify('+6 days');
-        $upComingEvents = $user->events()
-            ->where('start_date', '>=', $endDateTime)->get();
+        $upComingEvents = $user->events()->where('start_date', '>=', $endDateTime)->get();
         if ($upComingEvents->isNotEmpty()) {
             $filteredEvents = $upComingEvents->map(function ($filteredEvent) use ($userId) {
                 return EventHelper::putFavouriteStatusInEvent($filteredEvent, $userId);
@@ -108,14 +143,23 @@ class UserController
 
         return response()->json(['message' => __('event.noSuchEvents')], 404);
     }
-    public function searchUsers(Request $request)
-    {
-        $user = $request->user();  // Get the authenticated user
+ public function searchUsers(Request $request){
+        $user=$request->user();
+        $targetUsers=self::searchUsersStatic($request);
+        if($targetUsers['statusCode']===404){
+            return response()->json(['message' => $targetUsers['message']],$targetUsers['statusCode']);
+        }
+     return response()->json(['users' => $targetUsers['users']], $targetUsers['statusCode']);
 
-        // Initialize the query for users
+ }
+
+    public static function searchUsersStatic($request)
+    {
+        $user = $request->user();
+
+
         $query = User::query();
 
-        // Apply search filters
         if ($request->has('name')) {
             $name = $request->input('name');
             $query->where(DB::raw("CONCAT(first_name, ' ', last_name)"), 'LIKE', '%' . $name . '%');
@@ -140,25 +184,24 @@ class UserController
         if ($users->isNotEmpty()) {
             $filteredUsers = $users->filter(function ($filteredUser) use ($user) {
                 $friendship = Friendship::where(function ($query) use ($user, $filteredUser) {
-                    $query->where('sender_id', $user->id)
-                        ->where('receiver_id', $filteredUser->id);
+                    $query->where('sender_id', $user->id)->where('receiver_id', $filteredUser->id);
                 })->orWhere(function ($query) use ($user, $filteredUser) {
-                    $query->where('sender_id', $filteredUser->id)
-                        ->where('receiver_id', $user->id);
+                    $query->where('sender_id', $filteredUser->id)->where('receiver_id', $user->id);
                 })->first();
 
                 return !$friendship || $friendship->status !== 'BLOCKED';
             });
 
             if ($filteredUsers->isNotEmpty()) {
-                return response()->json(['users' => $filteredUsers->values()], 200);
+                return ['users' => $filteredUsers->values(),'statusCode'=> 200];
             }
         }
 
-        return response()->json(['message' => __('auth.userNotFound')], 404);
+        return ['message' => __('auth.userNotFound'),'statusCode'=> 404];
     }
 
-    public function editProfile(Request $request){
+    public function editProfile(Request $request)
+    {
         $user = $request->user();
         if ($request->has('firstName')) {
             $user->first_name = $request->input('firstName');
@@ -187,26 +230,23 @@ class UserController
             $user->email = $request->input('email');
         }
         $user->save();
-        $qrData=[
-            'id'=>$user->id,
-            'user name'=>" $user->first_name  $user->last_name",
-            'phone number'=>$user->phone_number,
-            'user email'=>$user->email
-        ];
-        QR_CodeHelper::generateAndSaveQrCode($qrData,'User');
+        $qrData = ['id' => $user->id, 'user name' => " $user->first_name  $user->last_name", 'phone number' => $user->phone_number, 'user email' => $user->email];
+        QR_CodeHelper::generateAndSaveQrCode($qrData, 'User');
         return response()->json(['user' => $user], 200);
     }
-    public function resetPassword(Request $request){
-        $user=$request->user();
-        $oldPassword=$request->input('oldPassword');
-        $newPassword=$request->input('newPassword');
-        $givenCurrentPassword=Hash::check($oldPassword,$user->password);
-        if($givenCurrentPassword){
-            $user->password=Hash::make($newPassword);
+
+    public function resetPassword(Request $request)
+    {
+        $user = $request->user();
+        $oldPassword = $request->input('oldPassword');
+        $newPassword = $request->input('newPassword');
+        $givenCurrentPassword = Hash::check($oldPassword, $user->password);
+        if ($givenCurrentPassword) {
+            $user->password = Hash::make($newPassword);
             $user->save();
-            return \response()->json(['message'=>__('auth.resetPassword')],200);
+            return \response()->json(['message' => __('auth.resetPassword')], 200);
         }
-        return \response()->json(['message'=>__('auth.password')],400);
+        return \response()->json(['message' => __('auth.password')], 400);
     }
 
 }

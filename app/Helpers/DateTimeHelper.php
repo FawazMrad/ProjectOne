@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 use Carbon\Carbon;
 use DateTime;
+use InvalidArgumentException;
 
 class DateTimeHelper
 {
@@ -17,7 +18,25 @@ class DateTimeHelper
 
       return new \DateTime( Carbon::now());
   }
-  public static function getFirstDayOfCurrentMonthAndLastDayOfAfterTowMonths(){
+    public static function getDateTime($type) {
+        $currentDateTime = self::getCurrentDateTime();
+        $dateTime = clone $currentDateTime;
+
+        switch ($type) {
+            case 'todayStart':
+                $dateTime->modify('today')->setTime(0, 0, 0);
+                break;
+            case 'tomorrowEnd':
+                $dateTime->modify('tomorrow')->setTime(23, 59, 59);
+                break;
+            default:
+                throw new InvalidArgumentException("Invalid type provided. Use 'todayStart' or 'tomorrowEnd'.");
+        }
+
+        return $dateTime;
+    }
+
+    public static function getFirstDayOfCurrentMonthAndLastDayOfAfterTowMonths(){
       $currentDateTime = self::getCurrentDateTime();
       $firstDayOfCurrentMonth = clone $currentDateTime;
       $firstDayOfCurrentMonth->modify('first day of this month')->setTime(0,0,0);

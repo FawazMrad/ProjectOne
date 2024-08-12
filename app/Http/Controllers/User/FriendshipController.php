@@ -6,6 +6,7 @@ namespace App\Http\Controllers\User;
 use App\Helpers\DateTimeHelper;
 use App\Models\Friendship;
 use App\Models\User;
+use http\Env\Response;
 use Illuminate\Http\Request;
 
 class FriendshipController
@@ -97,15 +98,24 @@ class FriendshipController
             $query->where('receiver_id', $userId)
                 ->orWhere('receiver_id', $targetId);
         })->first();
-        $friendship->status = 'BLOCKED';
-        $friendship->blocker_id = $userId;
-        $friendship->save();
-        self::changeNumbers($userId,-1,'following');
-        self::changeNumbers($targetId,-1,'followers');
-        self::changeNumbers($userId,-1,'followers');
-        self::changeNumbers($targetId,-1,'following');
-        return response()->json(['message' => __('friendship.blockedSuccessfully')], 200);
+        if($friendship->status==='BLOCKED') {
+            if ($friendship->blocker_id === $userId) {
+                Friendship::deleteFriendship($friendship->sender_id, $friendship->receiver_id);
+                return response()->json(['message' => __('auth.unBlock')], 200);
+            }
+            return response()->json(['message'=>'You can not do this action with this user'],400);
+        }
+            $friendship->status = 'BLOCKED';
+            $friendship->blocker_id = $userId;
+            $friendship->save();
+            self::changeNumbers($userId, -1, 'following');
+            self::changeNumbers($targetId, -1, 'followers');
+            self::changeNumbers($userId, -1, 'followers');
+            self::changeNumbers($targetId, -1, 'following');
+            return response()->json(['message' => __('friendship.blockedSuccessfully')], 200);
+
     }
+
     public function getFollowers(Request $request)
     {
         $userId = $request->user()->id;
@@ -122,24 +132,37 @@ class FriendshipController
             });
 
 
-        $mutualFriends = Friendship::with(['receiver' => function ($query) {
-            $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number',  'points', 'rating', 'profile_pic');
+// Get mutual friends
+        $mutualFriends = Friendship::with(['sender' => function ($query) {
+            $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number', 'points', 'rating', 'profile_pic');
+        }, 'receiver' => function ($query) {
+            $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number', 'points', 'rating', 'profile_pic');
         }])
-            ->where('sender_id', $userId)
+            ->where(function($query) use ($userId) {
+                $query->where('sender_id', $userId)
+                    ->orWhere('receiver_id', $userId);
+            })
             ->where('status', 'MUTUAL')
             ->get()
-            ->pluck('receiver')
-            ->filter(function ($user) {
+            ->map(function($friendship) use ($userId) {
+                // Return the user who is not the current user
+                return $friendship->sender_id == $userId ? $friendship->receiver : $friendship->sender;
+            })
+            ->filter(function($user) {
                 return !is_null($user);
             });
-        // Combine followers and mutual friends
+
         $allFollowers = $followers->merge($mutualFriends);
         return response()->json(['Followers' => $allFollowers,'Followers number'=>$allFollowers->count()], 200);
     }
-    public function getFollowing(Request $request)
+    public function getFollowing(Request $request){
+        $userId=$request->user()->id;
+        $following=self::getFollowingStatic($userId);
+        return response()->json(['Following' => $following['Following'],'Following number'=>$following['FollowingNumber']],$following['statusCode'] );
+
+    }
+    public static function getFollowingStatic($userId)
     {
-        $userId = $request->user()->id;
-        // Get followers
         $following = Friendship::with(['receiver' => function ($query) {
             $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number',  'points', 'rating', 'profile_pic');
         }])
@@ -151,14 +174,24 @@ class FriendshipController
                 return !is_null($user);
             });
 
-        // Get mutual friends
         $mutualFriends = Friendship::with(['sender' => function ($query) {
-            $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number',  'points', 'rating', 'profile_pic');
+            $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number', 'points', 'rating', 'profile_pic');
+        }, 'receiver' => function ($query) {
+            $query->select('id', 'first_name', 'last_name', 'email', 'address', 'phone_number', 'points', 'rating', 'profile_pic');
         }])
-            ->where('receiver_id', $userId)
+            ->where(function ($query) use ($userId) {
+                $query->where('receiver_id', $userId)
+                    ->orWhere('sender_id', $userId);
+            })
             ->where('status', 'MUTUAL')
             ->get()
-            ->pluck('sender')
+            ->map(function ($friendship) use ($userId) {
+                if ($friendship->sender_id == $userId) {
+                    return $friendship->receiver;
+                } else {
+                    return $friendship->sender;
+                }
+            })
             ->filter(function ($user) {
                 return !is_null($user);
             });
@@ -166,7 +199,7 @@ class FriendshipController
         // Combine followers and mutual friends
         $allFollowing = $following->merge($mutualFriends);
 
-        return response()->json(['Following' => $allFollowing,'Following number'=>$allFollowing->count()], 200);
+        return ['Following' => $allFollowing,'FollowingNumber'=>$allFollowing->count(),'statusCode'=> 200];
     }
     public function getBlocked(Request $request)
     {
@@ -178,7 +211,7 @@ class FriendshipController
             if ($blockedUser['sender_id'] === $userId) {
                 $filteredBlockedUsersId[] = $blockedUser->receiver_id;
             } else if ($blockedUser['receiver_id'] === $userId) {
-                $filteredBlockedUsersId[] = $blockedUser->receiver_id;
+                $filteredBlockedUsersId[] = $blockedUser->sender_id;
             }
 
         }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\DateTimeHelper;
 use App\Helpers\EventHelper;
 use App\Models\Attendee;
 use App\Models\User;
@@ -45,7 +46,10 @@ class ScannerController
         $newScannerId = $request->input('newScannerId');
         $isUserMainScanner = EventHelper::isUserMainScanner($userId, $eventId);
         if ($isUserMainScanner) {
-            $scannerAttendee = Attendee::where('user_id', $newScannerId)->where('event_id', $eventId)->where('status', 'PURCHASED')->first();
+            $scannerAttendee = Attendee::where('user_id', $newScannerId)
+                ->where('event_id', $eventId)
+                ->where('status', 'PURCHASED')
+                ->first();
             if (!$scannerAttendee) {
                 return response()->json(['message' => __('auth.notAttendee')], 400);
             }
@@ -61,6 +65,18 @@ class ScannerController
 
         }
         return response()->json(['message' => __('auth.notMainScanner')], 400);
+    }
+    public function getTodayEvents(Request $request){
+        $user=$request->user();
+        $userId=$user->id;
+        $startDateTimeToday=DateTimeHelper::getDateTime('todayStart');
+        $endDateTimeToday=DateTimeHelper::getDateTime('tomorrowEnd');
+        $events=$user->events()->where('start_date','>=',$startDateTimeToday)
+            ->where('end_date','<=',$endDateTimeToday)
+            ->get();
+        if($events->isNotEmpty())
+            return \response()->json(['events'=>$events],200);
+        return \response()->json(['message'=>__('event.noSuchEvents')],404);
     }
 
 }

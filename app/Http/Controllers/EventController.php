@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\DateTimeHelper;
 use App\Helpers\EventHelper;
 use App\Helpers\ResourcesHelper;
+use App\Models\Attendee;
 use App\Models\Category;
 use App\Models\DecorationItemReservation;
 use App\Models\DrinkReservation;
@@ -37,22 +38,13 @@ class EventController extends Controller
         $user = $request->user();
         $userId = $user->id;
 
-        $validatedData = $request->validate(['categoryId' => 'required|exists:categories,id',
-            'title' => 'required|string|max:100',
-            'description' => 'required|string',
-            'minAge' => 'required|integer|min:0',
-            'isPaid' => 'required|boolean',
-            'isPrivate' => 'required|boolean',
-            'attendanceType' => 'required|in:INVITATION,TICKET',
-            'image' => 'nullable|string',
-            'startDate' => 'required|date',
-            'endDate' => 'required|date|after_or_equal:startDate']);
+        $validatedData = $request->validate(['categoryId' => 'required|exists:categories,id', 'title' => 'required|string|max:100', 'description' => 'required|string', 'minAge' => 'required|integer|min:0', 'isPaid' => 'required|boolean', 'isPrivate' => 'required|boolean', 'attendanceType' => 'required|in:INVITATION,TICKET', 'image' => 'nullable|string', 'startDate' => 'required|date', 'endDate' => 'required|date|after_or_equal:startDate']);
 
         // Translate the description
         try {
             $validatedData = TranslationHelper::descriptionAndTranslatedDescription($validatedData);
         } catch (Exception $e) {
-            return response()->json(['message' => __('event.errorIncompleteStepOne'), 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => __('event.errorInTranslate')], 500);
         }
 
         DB::beginTransaction();
@@ -69,8 +61,8 @@ class EventController extends Controller
             if ($event) {
                 EventHelper::changeUserRating($user, 0.2);
                 QR_CodeHelper::generateAndSaveQrCode($data, $modelName);
-                $eventArray=$event->toArray();
-                $eventArray+=['eventId'=>$event->id];
+                $eventArray = $event->toArray();
+                $eventArray += ['eventId' => $event->id];
                 return response()->json(['message' => __('event.completeStepOne'), 'event' => $eventArray], 201);
             }
 
@@ -82,16 +74,17 @@ class EventController extends Controller
         }
     }
 
+
     public function storeStep2(Request $request)
     {
-        $user=$request->user();
-        $userId=$user->id;
+        $user = $request->user();
+        $userId = $user->id;
         $totalCost = 0;
         $eventId = $request->input('eventId');
         $event = Event::find($eventId);
         $dates = EventHelper::getEventDates($eventId);
         // RequestInfo
-        $venueInfo = $request->input('Venue')[0];
+        $venueId = $request->input('VenueId');
         $furnitureInfo = $request->input('Furniture', []);
         $decorationItemInfo = $request->input('DecorationItem', []);
         $soundInfo = $request->input('Sound', []);
@@ -99,21 +92,16 @@ class EventController extends Controller
         $foodInfo = $request->input('Food', []);
         $drinkInfo = $request->input('Drink', []);
 
-        if($furnitureInfo) {
-            $data=EventHelper::checkIfVenueCanContainSelectedChairs($furnitureInfo, $venueInfo['id']);
-            if($data['status']===false){
-                return \response()->json(['message' => __('event.exceedCapacity'),
-                    'vipChairsSelected' => $data['vipChairsSelected'],
-                    'regularChairsSelected' => $data['regularChairsSelected'],
-                    'maxNumberOfRegularChairs'=>$data['maxNumberOfRegularChairs'],
-                    'maxNumberOfVipChairs'=>$data['maxNumberOfVipChairs']],$data['statusCode']);
+        if ($furnitureInfo) {
+            $data = EventHelper::checkIfVenueCanContainSelectedChairs($furnitureInfo, $venueId,false);
+            if ($data['status'] === false) {
+                return \response()->json(['message' => __('event.exceedCapacity'), 'vipChairsSelected' => $data['vipChairsSelected'], 'regularChairsSelected' => $data['regularChairsSelected'], 'maxNumberOfRegularChairs' => $data['maxNumberOfRegularChairs'], 'maxNumberOfVipChairs' => $data['maxNumberOfVipChairs'],], $data['statusCode']);
             }
         }
 
-        $venueCost = ResourcesHelper::getCost('Venue', $venueInfo['id'], 1);
+        $venueCost = ResourcesHelper::getCost('Venue', $venueId, 1);
         $totalCost += $venueCost;
-        $venueReservation = VenueReservation::create(["venue_id" => $venueInfo['id'], "event_id" => $eventId, "start_date" => $dates['startDate'], "end_date" => $dates['endDate'], "cost" => $venueCost]);
-
+        $venueReservation = VenueReservation::create(["venue_id" => $venueId, "event_id" => $eventId, "start_date" => $dates['startDate'], "end_date" => $dates['endDate'], "cost" => $venueCost]);
 
         foreach ($furnitureInfo as $furnitureItem) {
             $furnitureCost = ResourcesHelper::getCost('Furniture', $furnitureItem['id'], $furnitureItem['quantity']);
@@ -169,11 +157,12 @@ class EventController extends Controller
         if ($event) {
             $withdrawResult = WalletController::withdraw($ownerId, $totalCost);
             if ($withdrawResult['status'] === true) {
-                EventHelper::makeAttendeeForEventCreator($userId,$eventId);
+                EventHelper::makeAttendeeForEventCreator($userId, $eventId);
                 return response()->json(['message' => __('event.completeStepTow'), 'event' => $event], 201);
-            }return response()->json(['message' => __('event.errorIncompleteStepTow'), 'withdraw error' => $withdrawResult['message']], 201);
+            }
+            return response()->json(['message' => __('event.errorIncompleteStepTow'), 'withdraw error' => $withdrawResult['message']], 401);
         }
-        return response()->json(['message' => __('event.errorIncompleteStepTow')], 400);
+        return response()->json(['message' => __('event.errorIncompleteStepTow')], 500);
     }
 
     public static function calculateTicketPrices($eventId, $totalCost)
@@ -236,10 +225,22 @@ class EventController extends Controller
         $eventId = $request->input('eventId');
         $event = Event::find($eventId);
         if ($event->is_paid) {
-            $regularTicketPrice = $event->ticket_price;
-            $vipTicketPrice = $event->vip_ticket_price;
-            $totalCost = $event->total_cost;
-            return response()->json(['totalCost' => $totalCost, 'regularTicketPrice' => $regularTicketPrice, 'vipTicketPrice' => $vipTicketPrice], 200);
+            if ($event->ticket_price > 0 && $event->vip_ticket_price > 0) {
+                $regularTicketPrice = $event->ticket_price;
+                $vipTicketPrice = $event->vip_ticket_price;
+                $totalCost = $event->total_cost;
+                return response()->json(['totalCost' => $totalCost, 'regularTicketPrice' => $regularTicketPrice, 'vipTicketPrice' => $vipTicketPrice], 200);
+            }
+            if ($event->ticket_price > 0 && $event->vip_ticket_price <= 0) {
+                $regularTicketPrice = $event->ticket_price;
+                $totalCost = $event->total_cost;
+                return response()->json(['totalCost' => $totalCost, 'regularTicketPrice' => $regularTicketPrice,], 200);
+            }
+            if ($event->ticket_price <= 0 && $event->vip_ticket_price > 0) {
+                $vipTicketPrice = $event->vip_ticket_price;
+                $totalCost = $event->total_cost;
+                return response()->json(['totalCost' => $totalCost, 'vipTicketPrice' => $vipTicketPrice,], 200);
+            }
         }
         return response()->json(['message' => __('event.notPaid')], 400);
     }
@@ -252,19 +253,18 @@ class EventController extends Controller
         $event = Event::find($eventId);
         $dates = EventHelper::getEventDates($eventId);
         if ($dates['currentDateTime'] < $dates['startDate'] && $dates['dateDifference']->days <= 5) {
-
             return response()->json(['message' => __('event.adjustPricesErrorBeforeEvent')], 400);
         } else {
-            if ($event->ticket_price > 0 && $event->vip_ticket_price > 0) {
+            if ($event->ticket_price > 0 && $event->vip_ticket_price > 0 && $event->is_paid) {
                 $event->ticket_price = $newRegularTicketPrice;
                 $event->vip_ticket_price = $newVipTicketPrice;
                 $event->save();
                 return response()->json(['message' => __('event.priceAdjustSuccess')], 200);
-            } else if ($event->ticket_price > 0 && $event->vip_ticket_price <= 0) {
+            } else if ($event->ticket_price > 0 && $event->vip_ticket_price <= 0 && $event->is_paid) {
                 $event->ticket_price = $newRegularTicketPrice;
                 $event->save();
                 return response()->json(['message' => __('event.priceAdjustSuccess')], 200);
-            } else if ($event->ticket_price <= 0 && $event->vip_ticket_price > 0) {
+            } else if ($event->ticket_price <= 0 && $event->vip_ticket_price > 0 && $event->is_paid) {
                 $event->vip_ticket_price = $newVipTicketPrice;
                 $event->save();
                 return response()->json(['message' => __('event.priceAdjustSuccess')], 200);
@@ -282,7 +282,15 @@ class EventController extends Controller
             return response()->json(['error' => 'Event not found'], 404);
         }
 
-        return response()->json(['furniture_reservations' => $event->furnitureReservations, 'music_reservations' => $event->soundReservations, 'security_reservations' => $event->securityReservations, 'food_reservations' => $event->foodReservations, 'drink_reservations' => $event->drinkReservations, 'decoration_item_reservations' => $event->decorationItemReservations]);
+        return response()->json([
+            'furniture_reservations' => $event->furnitureReservations,
+            'music_reservations' => $event->soundReservations,
+            'security_reservations' => $event->securityReservations,
+            'food_reservations' => $event->foodReservations,
+            'drink_reservations' => $event->drinkReservations,
+            'decoration_item_reservations' => $event->decorationItemReservations,
+            'eventStartDate'=>$event->start_date,
+            'eventEndDate'=>$event->end_date],200);
 
     }
 
@@ -292,7 +300,9 @@ class EventController extends Controller
         $type = $request->input('itemsType');
         $eventId = $request->input('eventId');
         $ownerId = $request->user()->id;
-
+        $event = Event::find($eventId);
+        $venueId=$event->venueReservation()->first()->venue_id;
+        $dates = EventHelper::getEventDates($eventId);
         // Initialize model variables based on item type
         $modelName = '';
         $modelReservations = '';
@@ -305,7 +315,10 @@ class EventController extends Controller
                 $modelReservations = 'FurnitureReservations';
                 $modelReservation = 'FurnitureReservation';
                 $modelNameId = 'furniture_id';
-
+                    $data = EventHelper::checkIfVenueCanContainSelectedChairs($newItems, $venueId,true);
+                    if ($data['status'] === false) {
+                        return \response()->json(['message' => __('event.exceedCapacity'), 'vipChairsSelected' => $data['vipChairsSelected'], 'regularChairsSelected' => $data['regularChairsSelected'], 'maxNumberOfRegularChairs' => $data['maxNumberOfRegularChairs'], 'maxNumberOfVipChairs' => $data['maxNumberOfVipChairs'],], $data['statusCode']);
+                }
                 break;
             case 'decorationItem':
                 $modelName = 'DecorationItem';
@@ -338,8 +351,7 @@ class EventController extends Controller
                 return response()->json(['message' => __('event.invalidItemType')], 400);
 
         }
-        $event = Event::find($eventId);
-        $dates = EventHelper::getEventDates($eventId);
+
         $updateCost = 0;
         // Check if the event is within 7 days
         if ($dates['dateDifference']->days <= 5) {
@@ -377,7 +389,6 @@ class EventController extends Controller
                         $withdrawResult = WalletController::withdraw($ownerId, $costDifference);
                         if ($withdrawResult['status'] === false) return response()->json(['withdraw error' => $withdrawResult['message']], 400);
                     }
-
                     $reservation->$costAttribute = $newCost;
                     $reservation->quantity = $newQuantity;
                     if ($type === 'decorationItem') {
@@ -393,10 +404,8 @@ class EventController extends Controller
                     $updateCost -= $oldCost;
                     $updateCost += $newCost;
                     $found = true;
-
                 }
             }
-
 
             if (!$found) { // Create a new reservation if not found
                 $newQuantity = $newItem['newQuantity'];
@@ -414,7 +423,6 @@ class EventController extends Controller
                     $reservationData['start_date'] = $dates['startDate'];
                     $reservationData['end_date'] = $dates['endDate'];
                 }
-
                 "App\\Models\\$modelReservation"::create($reservationData);
                 $updateCost += $cost;
             }
@@ -607,11 +615,7 @@ class EventController extends Controller
     {
         $user = $request->user();
         $userId = $user->id;
-        $events = Event::select('events.*', 'users.rating as creator_rating')
-            ->join('users', 'events.user_id', '=', 'users.id')
-            ->where('is_private', false)
-            ->orderBy('users.rating', 'desc')
-            ->take(10)->get();
+        $events = Event::select('events.*', 'users.rating as creator_rating')->join('users', 'events.user_id', '=', 'users.id')->where('is_private', false)->orderBy('users.rating', 'desc')->take(10)->get();
 
         if ($events) {
             $filteredEvents = EventHelper::filterEventsByBlockedFriendships($events, $user);
@@ -668,5 +672,23 @@ class EventController extends Controller
         $uniqueEvents = $allEvents->unique('id');
         if ($uniqueEvents->isNotEmpty()) return response()->json(['Events' => $uniqueEvents], 200);
         return response()->json(['Events' => __('event.noSuchEvents')], 404);
+    }
+
+    public function getPurchasedTickets(Request $request)
+    {
+        $user = $request->user();
+        $userPurchasedTickets = $user->attendees()->where('status', 'PURCHASED')->get();
+        if ($userPurchasedTickets->isNotEmpty()) return \response()->json(['purchasedTickets' => $userPurchasedTickets], 200);
+        return \response()->json(['message' => __('event.noTickets')], 404);
+    }
+
+    public function haveTicket(Request $request)
+    {
+        $user = $request->user();
+        $userId = $user->id;
+        $eventId = $request->input('eventId');
+        $attendee = Attendee::where('user_id', $userId)->where('event_id', $eventId)->where('status', 'PURCHASED')->first();
+        if ($attendee) return \response()->json(['isPurchased' => true], 200);
+        return \response()->json(['isPurchased' => false], 404);
     }
 }

@@ -41,4 +41,7 @@ return [
     'NoFav'=>'There are no events in your favourite',
     'notPaid'=>'This event is not paid',
     'exceedCapacity'=>'The selected furniture exceeds the venue capacity',
+    'errorInTranslate'=>'Error in the translation operation try again later',
+    'noInvitations'=>'This user currently does not have any invitation',
+    'noTickets'=>'This user currently does not have any ticket',
 ];

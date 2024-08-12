@@ -74,7 +74,12 @@ class ResourceController extends Controller
         $startAndEndDate = EventHelper::getStartAndEndDateForEvent($eventId);
 
         $availableResources = [];
+        if($request->has('categoryId')&&$request->input('resourceName')==='decorationItem')
+        {
+            $resourceItems = "App\\Models\\$resource" ::where('decoration_category_id',$request->input('categoryId'))->get();
+        }else{
         $resourceItems = "App\\Models\\$resource"::all();
+        }
     foreach ($resourceItems as $item) {
         $reservationModel = "App\\Models\\{$resource}Reservation";
         $reservedQuantity = $reservationModel::where($resourceSmallLetter . '_id', $item->id)
@@ -96,7 +101,7 @@ class ResourceController extends Controller
         $availableResources[$resourceSmallLetter . '_items'][] = [
             'item' => [
                 'id' => $item->id,
-                'decoration_category_id' => $item->category_id,
+                'decoration_category_id' => $item->decoration_category_id,
                 'name' => $item->name,
                 'image' => $item->image,
                 'description' => $item->{'description_' . app()->getLocale()},
@@ -119,31 +124,26 @@ class ResourceController extends Controller
     {
         $eventId = $request->input('eventId');
         $eventRequiredAge = Event::find($eventId)->min_age;
-        $typeSmallLetter = strtolower($request->input('type'));
-        $type = ucfirst($request->input('type'));
+        $typeSmallLetter = strtolower($request->input('category'));
+        $type = ucfirst($request->input('category'));
         $modelClass = "App\\Models\\$type";
 
-        // Check if the class exists and get all records
         if (!class_exists($modelClass)) {
             return response()->json(['message' => __('resource.cateringNotFound')], 404);
         }
 
         $getType = $modelClass::all();
 
-        // Check if the collection is empty
         if ($getType->isEmpty()) {
             return response()->json(['message' => __('resource.cateringNotFound')], 404);
         }
 
         $locale = app()->getLocale();
         $availableItems = $getType->filter(function ($item) use ($eventRequiredAge, $typeSmallLetter) {
-            // Initialize ageRequired to 0 for food items
             $ageRequired = 0;
-
-            // Set ageRequired if the type is drink
             if ($typeSmallLetter === 'drink') {
                 $ageRequired = $item->age_required;
-                // Skip this item if the event's required age is less than the drink's required age
+
                 if ($eventRequiredAge < $ageRequired) {
                     return false;
                 }
@@ -154,7 +154,7 @@ class ResourceController extends Controller
             return [
                 'id' => $item->id,
                 'name' => $item->name,
-                'type' => $typeSmallLetter,
+                'type' => $item->type,
                 'description' => $item->{'description_' . $locale},
                 'individual_cost' => $item->cost,
                 'image' => $item->image,

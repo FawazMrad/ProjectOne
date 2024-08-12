@@ -27,4 +27,6 @@ return [
     'alreadyScanner'=>'This user is already scanner for this event',
     'notMainScanner'=>'This User is not the main scanner for this event',
      'newScanner'=>'Now this user is a scanner for your event and his/her rating increased by 0.3',
+    'unBlock'=>'This user unBlocked successfully , now you can re send follow again',
+    'creatorCannotPurchase'=>'This user is the event creator and cannot purchase ticket',
 ];

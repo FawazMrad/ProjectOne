@@ -6,6 +6,8 @@ namespace App\Http\Controllers;
 use App\Helpers\DateTimeHelper;
 use App\Helpers\EventHelper;
 use App\Helpers\QR_CodeHelper;
+use App\Http\Controllers\User\FriendshipController;
+use App\Http\Controllers\User\UserController;
 use App\Models\Attendee;
 use App\Models\Event;
 use App\Models\User;
@@ -17,6 +19,54 @@ use Illuminate\Support\Facades\DB;
 
 class AttendeeController
 {
+    public function searchUsersToInvite(Request $request){
+        $user=$request->user();
+        $eventId=$request->input('eventId');
+        $event=Event::find($eventId);
+        $eventAttendeesIds = $event->attendees()->pluck('user_id')->toArray();
+
+        $users=UserController::searchUsersStatic($request)['users'];
+        if(!$users )
+            return response()->json(['Users'=>0],404);
+        $filteredUsers=self::filterInvitedUsers($users,$eventAttendeesIds);
+        if($filteredUsers)
+            return response()->json(['Users'=>$filteredUsers],200);
+        return response()->json(['Users'=>$filteredUsers],404);
+    }
+    public static function filterInvitedUsers($users,$eventAttendees){
+        $usersToInvite = [];
+        foreach ($users as $user) {
+            if (!in_array($user->id, $eventAttendees)) {
+                $usersToInvite[] = $user;
+            }
+        }
+        return $usersToInvite;
+    }
+    public function getFollowingToInvite(Request $request)
+    {
+        $user = $request->user();
+        $eventId = $request->input('eventId');
+        $event = Event::find($eventId);
+
+        $following = FriendshipController::getFollowingStatic($user->id); // Following  FollowingNumber
+
+        $eventAttendees = $event->attendees()->pluck('user_id')->toArray();
+        $followingToInvite = [];
+        $followingToInvite =self::filterInvitedUsers($following['Following'],$eventAttendees);
+
+        if($followingToInvite)
+        return response()->json(['Following'=>$followingToInvite],200);
+        return response()->json(['Following'=>$followingToInvite],404);
+    }
+    public function getInvitedUsers(Request $request){
+        $user=$request->user();
+        $eventId=$request->input('eventId');
+        $event=Event::find($eventId);
+        $attendees=$event->attendees()->get();
+        if($attendees->isNotEmpty())
+         return \response()->json(['invitedUsers'=>$attendees],200);
+         return \response()->json(['invitedUsers'=>0],404);
+    }
     public function sendInvitation(Request $request)
     {
         $userId = $request->input('userId');
@@ -72,12 +122,10 @@ class AttendeeController
     public function confirmInvitation(Request $request)
     {
         $userId = $request->user()->id;
-        $eventId = $request->input('eventId');
         $attendeeId = $request->input('attendeeId');
 
         $attendee = Attendee::find($attendeeId);
-        $event = Event::find($eventId);
-
+        $event = $attendee->event()->get();
         if ($attendee->status !== 'INVITED') {
             return response()->json(['message' => 'Invitation cannot be confirmed'], 400);
         }
@@ -123,6 +171,10 @@ class AttendeeController
         }
 
         $isUserAttend = Attendee::where('user_id', $userId)->where('event_id', $eventId)->first();
+//        if($isUserAttend){
+//            if($isUserAttend->is_main_scanner)
+//                return \response()->json(['message'=>__('auth.creatorCannotPurchase')],403);
+//        }
         if ($isUserAttend) if ($isUserAttend->status !== 'CANCELLED') return response()->json(['message' => __('event.userAlreadyAttend')], 400);
         $dates = EventHelper::getEventDates($eventId);
         if ($dates['dateDifference']->days > 5) {

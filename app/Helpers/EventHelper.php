@@ -49,8 +49,12 @@ class EventHelper
         $attendee->save();
     }
 
-    public static function checkIfVenueCanContainSelectedChairs($furnitureInfo, $venueId)
+    public static function checkIfVenueCanContainSelectedChairs($furnitureInfo, $venueId,$isForUpdate)
     {
+        if($isForUpdate)
+        $quantityVar='newQuantity';
+            else
+                $quantityVar='quantity';
         $venue = Venue::find($venueId);
         $maxNumberOfRegularChairs = $venue->max_capacity_chairs;
         $maxNumberOfVipChairs = $venue->vip_chairs;
@@ -65,14 +69,18 @@ class EventHelper
             }
 
             if (stripos($furnitureObject->type, '_vipChair') !== false) {
-                $numberOfVipChairs += $furniture['quantity'];
+                $numberOfVipChairs += $furniture[$quantityVar];
             } else if (stripos($furnitureObject->type, '_regularChair') !== false) {
-                $numberOfRegularChairs += $furniture['quantity'];
+                $numberOfRegularChairs += $furniture[$quantityVar];
             }
         }
 
         if ($numberOfVipChairs > $maxNumberOfVipChairs || $numberOfRegularChairs > $maxNumberOfRegularChairs) {
-            return $data = ['message' => __('event.exceedCapacity'), 'vipChairsSelected' => $numberOfVipChairs, 'regularChairsSelected' => $numberOfRegularChairs, 'maxNumberOfRegularChairs' => $maxNumberOfRegularChairs, 'maxNumberOfVipChairs' => $maxNumberOfVipChairs, 'statusCode' => 400, 'status' => false];
+            return $data = ['message' => __('event.exceedCapacity'),
+                'vipChairsSelected' => $numberOfVipChairs,
+                'regularChairsSelected' => $numberOfRegularChairs,
+                'maxNumberOfRegularChairs' => $maxNumberOfRegularChairs,
+                'maxNumberOfVipChairs' => $maxNumberOfVipChairs, 'statusCode' => 400, 'status' => false];
 
         }
 

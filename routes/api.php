@@ -59,6 +59,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/events/getEvent', [EventController::class, 'getEvent']); //getThe desired event
     Route::get('/events/mostPopularEvents', [EventController::class, 'mostPopularEvents']); //getThe most popular events
     Route::post('/events/getEventsByCategory', [EventController::class, 'getEventsByCategory']); //getThe events by their categories
+    Route::get('/events/getPurchasedTickets', [EventController::class, 'getPurchasedTickets']); //getThe getPurchasedTickets
+    Route::post('/events/haveTicket', [EventController::class, 'haveTicket']); //to Know if the user have ticket in this event
 
     //for wallet
     Route::post('/wallet/deposit', [WalletController::class, 'deposit']); //add money to the user's wallet
@@ -93,12 +95,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/attendees/cancelTicket', [AttendeeController::class, 'cancelTicket']);//for cancel Tickets
     Route::post('/attendees/checkIn', [ScannerController::class, 'checkIn']);//for check in Tickets
     Route::post('/attendees/makeScanner', [ScannerController::class, 'makeScanner']);//for make scanners
+    Route::get('/attendees/getTodayEvents', [ScannerController::class, 'getTodayEvents']);//for getTodayEvents
+//for invitations
+    Route::post('/attendees/getInvitedUsers', [AttendeeController::class, 'getInvitedUsers']);//for getInvitedUsers
+    Route::post('/attendees/getFollowingToInvite', [AttendeeController::class, 'getFollowingToInvite']);//for getFollowingToInvite
+    Route::post('/attendees/searchUsersToInvite', [AttendeeController::class, 'searchUsersToInvite']);//for searchUsersToInvite
+
 //for profile
     Route::get('/users/getProfile', [UserController::class, 'getProfile']);//for getProfile
     Route::get('/users/getAttendedEvents', [UserController::class, 'getAttendedEvents']);//for getAttended Events
     Route::get('/users/eventsCreatedHistory', [UserController::class, 'eventsCreatedHistory']);//for eventsCreatedHistory
     Route::get('/users/getCreatedUpdatableEvents', [UserController::class, 'getCreatedUpdatableEvents']);//for getCreatedUpdatableEvents
-    Route::get('/users/searchUsers', [UserController::class, 'searchUsers']);//for searchUsers
+    Route::get('/users/getInvitations', [UserController::class, 'getInvitations']);//for getInvitations with header: INVITED , OTHER
+    Route::post('/users/searchUsers', [UserController::class, 'searchUsers']);//for searchUsers
     Route::post('/users/editProfile', [UserController::class, 'editProfile']);//for editProfile
     Route::post('/users/resetPassword', [UserController::class, 'resetPassword']);//for reset Password
 //for calender
