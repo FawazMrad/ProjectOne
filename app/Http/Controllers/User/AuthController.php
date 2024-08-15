@@ -101,7 +101,7 @@ class AuthController extends Controller
                 'token' => $user->createToken("API TOKEN")->plainTextToken
             ], 200);
         } catch (\Throwable $th) {
-            return response()->json(['message' => $th->getMessage()], 500);
+            return response()->json(['message' => __('auth.failed')], 404);
         }
     }
     public function signOut(Request $request){

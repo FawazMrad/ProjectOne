@@ -109,7 +109,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/getInvitations', [UserController::class, 'getInvitations']);//for getInvitations with header: INVITED , OTHER
     Route::post('/users/searchUsers', [UserController::class, 'searchUsers']);//for searchUsers
     Route::post('/users/editProfile', [UserController::class, 'editProfile']);//for editProfile
-    Route::post('/users/resetPassword', [UserController::class, 'resetPassword']);//for reset Password
+   // Route::post('/users/resetPassword', [UserController::class, 'resetPassword']);//for reset Password
 //for calender
     Route::get('/events/calender', [EventController::class, 'calender']);//for calender
 //for rating

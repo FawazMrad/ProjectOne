@@ -229,24 +229,22 @@ class UserController
         if ($request->has('email')) {
             $user->email = $request->input('email');
         }
+        if($request->has('oldPassword')) {
+            $oldPassword = $request->input('oldPassword');
+            $newPassword = $request->input('newPassword');
+            $givenCurrentPassword = Hash::check($oldPassword, $user->password);
+            if ($givenCurrentPassword) {
+                $user->password = Hash::make($newPassword);
+            }else {
+                return \response()->json(['message' => __('auth.password')], 400);
+            }
+        }
         $user->save();
         $qrData = ['id' => $user->id, 'user name' => " $user->first_name  $user->last_name", 'phone number' => $user->phone_number, 'user email' => $user->email];
         QR_CodeHelper::generateAndSaveQrCode($qrData, 'User');
         return response()->json(['user' => $user], 200);
     }
 
-    public function resetPassword(Request $request)
-    {
-        $user = $request->user();
-        $oldPassword = $request->input('oldPassword');
-        $newPassword = $request->input('newPassword');
-        $givenCurrentPassword = Hash::check($oldPassword, $user->password);
-        if ($givenCurrentPassword) {
-            $user->password = Hash::make($newPassword);
-            $user->save();
-            return \response()->json(['message' => __('auth.resetPassword')], 200);
-        }
-        return \response()->json(['message' => __('auth.password')], 400);
-    }
+
 
 }

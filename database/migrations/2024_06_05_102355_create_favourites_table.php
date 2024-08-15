@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->references('id')->on('users');
             $table->foreignId('event_id')->references('id')->on('events');
+            $table->foreignId('event_id')->references('id')->on('events')->onDelete('cascade');
             $table->enum('priority_level', ['LOW', 'MID', 'HIGH']);
             $table->timestamps();
         });

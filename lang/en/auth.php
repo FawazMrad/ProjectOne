@@ -29,4 +29,5 @@ return [
      'newScanner'=>'Now this user is a scanner for your event and his/her rating increased by 0.3',
     'unBlock'=>'This user unBlocked successfully , now you can re send follow again',
     'creatorCannotPurchase'=>'This user is the event creator and cannot purchase ticket',
+    'qrError'=>'There is an unexpected error while we generate the QR code',
 ];
