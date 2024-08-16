@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\DecorationCategoryResource\Pages;
 use App\Filament\Resources\DecorationCategoryResource\RelationManagers;
+use App\Helpers\TranslationHelper;
 use App\Models\DecorationCategory;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -27,20 +28,37 @@ class DecorationCategoryResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(100),
-                Forms\Components\TextInput::make('icon')
-                    ->url()
-                    ->placeholder('https://example.com/path/to/image.jpg'),
-                Forms\Components\Textarea::make('description_ar')
-                    ->label('Arabic Description')
-                    ->maxLength(65535)
-                    ->columnSpanFull(),
-                Forms\Components\Textarea::make('description_en')
-                    ->label('English Description')
-                    ->maxLength(65535)
-                    ->columnSpanFull(),
+                Forms\Components\Section::make()->schema([
+                    Forms\Components\TextInput::make('name')
+                        ->required()
+                        ->maxLength(100),
+                    Forms\Components\TextInput::make('icon')
+                        ->required()
+                        ->url()
+                        ->placeholder('https://example.com/path/to/image.jpg'),
+                    Forms\Components\TextArea::make('description')
+                        ->visible(fn($context) => $context === 'create' || $context === 'edit')
+                        ->label('Description')
+                        ->columnSpanFull()
+                        ->maxLength(255)
+                        ->afterStateUpdated(function (callable $get, callable $set) {
+                            $description = $get('description');
+                            if ($description) {
+                                try {
+                                    $translatedData = TranslationHelper::descriptionAndTranslatedDescription(['description' => $description]);
+                                    $set('description_en', $translatedData['description_en']);
+                                    $set('description_ar', $translatedData['description_ar']);
+                                } catch (\Exception $e) {
+                                    $set('description_en', '');
+                                    $set('description_ar', '');
+                                }
+                            }
+                        }),
+                    Forms\Components\Hidden::make('description_en')
+                        ->label('English Description'),
+                    Forms\Components\Hidden::make('description_ar')
+                        ->label('Arabic Description'),
+                ])->columns(2),
             ]);
     }
 
@@ -53,6 +71,8 @@ class DecorationCategoryResource extends Resource
                     ->size(50),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('description_en')
+                    ->label('Description'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -27,20 +28,23 @@ class DrinkReservationResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('drink_id')
-                    ->relationship(name: 'drink', titleAttribute: 'name')
-                    ->required(),
-                Forms\Components\Select::make('event_id')
-                    ->relationship(name: 'event', titleAttribute: 'title')
-                    ->required(),
-                Forms\Components\TextInput::make('quantity')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('total_price')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\DateTimePicker::make('serving_date')
-                    ->required(),
+                Forms\Components\Section::make()->schema([
+                    Forms\Components\Select::make('drink_id')
+                        ->relationship(name: 'drink', titleAttribute: 'name')
+                        ->required(),
+                    Forms\Components\Select::make('event_id')
+                        ->relationship(name: 'event', titleAttribute: 'title')
+                        ->required(),
+                    Forms\Components\TextInput::make('quantity')
+                        ->required()
+                        ->numeric(),
+                    Forms\Components\TextInput::make('total_price')
+                        ->required()
+                        ->numeric(),
+                    Forms\Components\DateTimePicker::make('serving_date')
+                        ->required()
+                        ->columnSpanFull(),
+                ])->columns(2)
             ]);
     }
 
@@ -49,10 +53,10 @@ class DrinkReservationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('drink.name')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('event.title')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('quantity')
                     ->numeric()
@@ -72,12 +76,20 @@ class DrinkReservationResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->groups([
+                Group::make('drink.name')
+                    ->groupQueryUsing(fn(Builder $query) => $query->groupBy('drink.name'))
+            ])
+            ->groups([
+                Group::make('event.title')
+                    ->groupQueryUsing(fn(Builder $query) => $query->groupBy('event.title'))
+            ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+//                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -97,9 +109,9 @@ class DrinkReservationResource extends Resource
     {
         return [
             'index' => Pages\ListDrinkReservations::route('/'),
-            'create' => Pages\CreateDrinkReservation::route('/create'),
+//            'create' => Pages\CreateDrinkReservation::route('/create'),
             'view' => Pages\ViewDrinkReservation::route('/{record}'),
-            'edit' => Pages\EditDrinkReservation::route('/{record}/edit'),
+//            'edit' => Pages\EditDrinkReservation::route('/{record}/edit'),
         ];
     }
 }

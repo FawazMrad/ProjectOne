@@ -11,6 +11,7 @@ class Station extends Model
     protected $fillable=[
         'governorate',
         'name',
+        'password',
         'location',
         'manager_name',
         'manager_email',

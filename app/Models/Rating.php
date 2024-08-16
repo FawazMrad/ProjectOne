@@ -29,4 +29,8 @@ class Rating extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function getKey()
+    {
+        return $this->event_id . '-' . $this->user_id;
+    }
 }

@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -27,24 +28,27 @@ class VenueReservationResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('venue_id')
-                    ->relationship(name: 'venue', titleAttribute: 'name')
-                    ->required(),
-                Forms\Components\Select::make('event_id')
-                    ->relationship(name: 'event', titleAttribute: 'title')
-                    ->required(),
-                Forms\Components\DateTimePicker::make('start_date')
-                    ->required(),
-                Forms\Components\DateTimePicker::make('end_date')
-                    ->required(),
-                Forms\Components\TextInput::make('booked_seats')
-                    ->numeric(),
-                Forms\Components\TextInput::make('booked_vip_seats')
-                    ->numeric(),
-                Forms\Components\TextInput::make('cost')
-                    ->required()
-                    ->numeric()
-                    ->prefix('$'),
+                Forms\Components\Section::make()->schema([
+                    Forms\Components\Select::make('venue_id')
+                        ->relationship(name: 'venue', titleAttribute: 'name')
+                        ->required(),
+                    Forms\Components\Select::make('event_id')
+                        ->relationship(name: 'event', titleAttribute: 'title')
+                        ->required(),
+                    Forms\Components\DateTimePicker::make('start_date')
+                        ->required(),
+                    Forms\Components\DateTimePicker::make('end_date')
+                        ->required(),
+                    Forms\Components\TextInput::make('booked_seats')
+                        ->numeric(),
+                    Forms\Components\TextInput::make('booked_vip_seats')
+                        ->numeric(),
+                    Forms\Components\TextInput::make('cost')
+                        ->required()
+                        ->columnSpanFull(true)
+                        ->numeric()
+                        ->prefix('$'),
+                ])->columns(2),
             ]);
     }
 
@@ -53,11 +57,9 @@ class VenueReservationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('venue.name')
-                    ->numeric()
-                    ->sortable(),
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('event.title')
-                    ->numeric()
-                    ->sortable(),
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('start_date')
                     ->dateTime()
                     ->sortable(),
@@ -69,7 +71,8 @@ class VenueReservationResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('booked_vip_seats')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('cost')
                     ->money()
                     ->sortable(),
@@ -82,12 +85,20 @@ class VenueReservationResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->groups([
+                Group::make('venue.name')
+                    ->groupQueryUsing(fn(Builder $query) => $query->groupBy('venue.name'))
+            ])
+            ->groups([
+                Group::make('event.title')
+                    ->groupQueryUsing(fn(Builder $query) => $query->groupBy('event.title'))
+            ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                //Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -107,9 +118,9 @@ class VenueReservationResource extends Resource
     {
         return [
             'index' => Pages\ListVenueReservations::route('/'),
-            'create' => Pages\CreateVenueReservation::route('/create'),
+            //'create' => Pages\CreateVenueReservation::route('/create'),
             'view' => Pages\ViewVenueReservation::route('/{record}'),
-            'edit' => Pages\EditVenueReservation::route('/{record}/edit'),
+            //'edit' => Pages\EditVenueReservation::route('/{record}/edit'),
         ];
     }
 }

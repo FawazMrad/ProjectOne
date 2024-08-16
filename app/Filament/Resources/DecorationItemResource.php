@@ -4,11 +4,14 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\DecorationItemResource\Pages;
 use App\Filament\Resources\DecorationItemResource\RelationManagers;
+use App\Filament\Resources\DecorationItemResource\RelationManagers\DecorationItemReservationsRelationManager;
+use App\Helpers\TranslationHelper;
 use App\Models\DecorationItem;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -27,32 +30,50 @@ class DecorationItemResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(100),
-                Forms\Components\Select::make('category_id')
-                    ->relationship(name: 'decorationCategory', titleAttribute: 'name')
-                    ->label('Category')
-                    ->searchable()
-                    ->native(false)
-                    ->preload()
-                    ->required(),
-                Forms\Components\Textarea::make('description_en')
-                    ->label('English Description')
-                    ->maxLength(65535)
-                    ->columnSpanFull(),
-                Forms\Components\Textarea::make('description_ar')
-                    ->label('Arabic Description')
-                    ->maxLength(65535)
-                    ->columnSpanFull(),
-                Forms\Components\TextInput::make('quantity')
-                    ->numeric(),
-                Forms\Components\TextInput::make('cost')
-                    ->numeric()
-                    ->prefix('$'),
-                Forms\Components\TextInput::make('image')
-                    ->url()
-                    ->placeholder('https://example.com/path/to/image.jpg'),
+                Forms\Components\Section::make()->schema([
+                    Forms\Components\TextInput::make('name')
+                        ->required()
+                        ->maxLength(100),
+                    Forms\Components\Select::make('decoration_category_id')
+                        ->relationship(name: 'decorationCategory', titleAttribute: 'name')
+                        ->label('Category')
+                        ->searchable()
+                        ->native(false)
+                        ->preload()
+                        ->required(),
+                    Forms\Components\TextArea::make('description')
+                        ->visible(fn($context) => $context === 'create' || $context === 'edit')
+                        ->label('Description')
+                        ->maxLength(255)
+                        ->afterStateUpdated(function (callable $get, callable $set) {
+                            $description = $get('description');
+                            if ($description) {
+                                try {
+                                    $translatedData = TranslationHelper::descriptionAndTranslatedDescription(['description' => $description]);
+                                    $set('description_en', $translatedData['description_en']);
+                                    $set('description_ar', $translatedData['description_ar']);
+                                } catch (\Exception $e) {
+                                    $set('description_en', '');
+                                    $set('description_ar', '');
+                                }
+                            }
+                        }),
+                    Forms\Components\Hidden::make('description_en')
+                        ->label('English Description'),
+                    Forms\Components\Hidden::make('description_ar')
+                        ->label('Arabic Description'),
+                    Forms\Components\TextInput::make('quantity')
+                        ->required()
+                        ->numeric(),
+                    Forms\Components\TextInput::make('cost')
+                        ->required()
+                        ->numeric()
+                        ->prefix('$'),
+                    Forms\Components\TextInput::make('image')
+                        ->url()
+                        ->required()
+                        ->placeholder('https://example.com/path/to/image.jpg'),
+                ])->columns(2),
             ]);
     }
 
@@ -65,8 +86,10 @@ class DecorationItemResource extends Resource
                     ->size(50),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('decorationCategory.name')   //TODO
-                ->sortable(),
+                Tables\Columns\TextColumn::make('decorationCategory.name')
+                ->searchable(),
+                Tables\Columns\TextColumn::make('description_en')
+                    ->label('Description'),
                 Tables\Columns\TextColumn::make('quantity')
                     ->numeric()
                     ->sortable(),
@@ -83,7 +106,8 @@ class DecorationItemResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('Category')
+                    ->relationship(name: 'decorationCategory', titleAttribute: 'name'),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -100,7 +124,7 @@ class DecorationItemResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            DecorationItemReservationsRelationManager::class,
         ];
     }
 

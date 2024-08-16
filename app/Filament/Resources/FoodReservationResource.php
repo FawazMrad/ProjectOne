@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -27,20 +28,24 @@ class FoodReservationResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('food_id')
-                    ->relationship(name: 'food', titleAttribute: 'name')
-                    ->required(),
-                Forms\Components\Select::make('event_id')
-                    ->relationship(name: 'event', titleAttribute: 'title')
-                    ->required(),
-                Forms\Components\TextInput::make('quantity')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('total_price')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\DateTimePicker::make('serving_date')
-                    ->required(),
+                Forms\Components\Section::make()->schema([
+                    Forms\Components\Select::make('food_id')
+                        ->relationship(name: 'food', titleAttribute: 'name')
+                        ->required(),
+                    Forms\Components\Select::make('event_id')
+                        ->relationship(name: 'event', titleAttribute: 'title')
+                        ->required(),
+                    Forms\Components\TextInput::make('quantity')
+                        ->required()
+                        ->numeric(),
+                    Forms\Components\TextInput::make('total_price')
+                        ->required()
+                        ->prefix('$')
+                        ->numeric(),
+                    Forms\Components\DateTimePicker::make('serving_date')
+                        ->columnSpanFull()
+                        ->required(),
+                ])->columns(2)
             ]);
     }
 
@@ -49,15 +54,16 @@ class FoodReservationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('food.name')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('event.title')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('quantity')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('total_price')
+                    ->prefix('$')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('serving_date')
@@ -72,12 +78,20 @@ class FoodReservationResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->groups([
+                Group::make('food.name')
+                    ->groupQueryUsing(fn(Builder $query) => $query->groupBy('food.name'))
+            ])
+            ->groups([
+                Group::make('event.title')
+                    ->groupQueryUsing(fn(Builder $query) => $query->groupBy('event.title'))
+            ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                //Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -97,9 +111,9 @@ class FoodReservationResource extends Resource
     {
         return [
             'index' => Pages\ListFoodReservations::route('/'),
-            'create' => Pages\CreateFoodReservation::route('/create'),
+//            'create' => Pages\CreateFoodReservation::route('/create'),
             'view' => Pages\ViewFoodReservation::route('/{record}'),
-            'edit' => Pages\EditFoodReservation::route('/{record}/edit'),
+//            'edit' => Pages\EditFoodReservation::route('/{record}/edit'),
         ];
     }
 }

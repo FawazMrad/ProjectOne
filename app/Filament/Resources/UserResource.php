@@ -5,8 +5,11 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
+use BaconQrCode\Renderer\RendererStyle\Fill;
+use Carbon\Carbon;
 use Doctrine\DBAL\Schema\Column;
 use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -27,7 +30,7 @@ class UserResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        return User::query()->whereDoesntHave('roles', fn(Builder $roleQuery) => $roleQuery->where('name', 'admin'))->count();
     }
 
     public static function getNavigationBadgeColor(): string|array|null
@@ -54,14 +57,12 @@ class UserResource extends Resource
                             ->email()
                             ->required()
                             ->maxLength(100),
-                        Forms\Components\Toggle::make('is_verified')
-                            ->required(),
-                    ])->columns(2),
+                    ]),
                 Forms\Components\Section::make('Contact Info')
                     ->schema([
                         Forms\Components\TextInput::make('address')
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('phone-number')
+                        Forms\Components\TextInput::make('phone_number')
                             ->tel()
                             ->maxLength(20),
                     ])->columns(2),
@@ -70,8 +71,7 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('profile_pic')
                             ->label('Profile photo')
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('age')
-                            ->numeric(),
+                        Forms\Components\DatePicker::make('birth_date'),
                         Forms\Components\TextInput::make('points')
                             ->required()
                             ->numeric()
@@ -97,19 +97,17 @@ class UserResource extends Resource
                     ->size(50)
                     ->label('Profile Photo'),
                 Tables\Columns\TextColumn::make('full_name')
+                    ->searchable(['first_name', 'last_name'])
                     ->label('Name')
-                    ->searchable(),
+                    ->sortable(['first_name', 'last_name']),
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
-                Tables\Columns\IconColumn::make('is_verified')
-                    ->boolean()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('address')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('phone-number')
+                Tables\Columns\TextColumn::make('phone_number')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('age')
+                Tables\Columns\TextColumn::make('birth_date')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('points')
@@ -131,17 +129,53 @@ class UserResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-//                Tables\Columns\IconColumn::make('is_admin')
-//                    ->boolean()
-//                    ->getStateUsing(function ($record) {
-//                        return $record->hasRole('admin');
-//                    }),
             ])
             ->filters([
-//                Filter::make('is_admin')
-//                    ->query(fn(Builder $query): Builder => $query->whereHas('roles', fn(Builder $roleQuery) => $roleQuery->where('name', 'admin')
-//                    )
-//                    )
+                Filter::make('age')
+                    ->form([
+                        Forms\Components\TextInput::make('age')
+                            ->label('Age')
+                            ->numeric()
+                            ->minValue(0)
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        if (isset($data['age'])) {
+                            $age = (int)$data['age'];
+                            $date = now()->subYears($age)->format('Y-m-d');
+                            return $query->whereDate('birth_date', '<=', $date)
+                                ->whereDate('birth_date', '>', now()->subYears($age + 1)->format('Y-m-d'));
+                        }
+                        return $query;
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        if (!isset($data['age'])) {
+                            return null;
+                        }
+
+                        return 'Age: ' . (int)$data['age'];
+                    }),
+                Filter::make('min_rating')
+                    ->form([
+                        Forms\Components\TextInput::make('rating')
+                            ->label('Minimum Rating')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(10)
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        if (isset($data['rating'])) {
+                            $rating = (float)$data['rating'];
+                            return $query->where('rating', '>=', $rating);
+                        }
+                        return $query;
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        if (!isset($data['rating'])) {
+                            return null;
+                        }
+
+                        return 'Minimum Rating: ' . (float)$data['rating'];
+                    })
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

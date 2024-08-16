@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -27,24 +28,26 @@ class FurnitureReservationResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('event_id')
-                    ->relationship(name: 'event', titleAttribute: 'title')
-                    ->required(),
-                Forms\Components\Select::make('furniture_id')
-                    ->relationship(name: 'furniture', titleAttribute: 'name')
-                    ->label('Furniture')
-                    ->required(),
-                Forms\Components\TextInput::make('quantity')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\DateTimePicker::make('start_date')
-                    ->required(),
-                Forms\Components\DateTimePicker::make('end_date')
-                    ->required(),
-                Forms\Components\TextInput::make('cost')
-                    ->required()
-                    ->numeric()
-                    ->prefix('$'),
+                Forms\Components\Section::make()->schema([
+                    Forms\Components\Select::make('event_id')
+                        ->relationship(name: 'event', titleAttribute: 'title')
+                        ->required(),
+                    Forms\Components\Select::make('furniture_id')
+                        ->relationship(name: 'furniture', titleAttribute: 'name')
+                        ->label('Furniture')
+                        ->required(),
+                    Forms\Components\TextInput::make('quantity')
+                        ->required()
+                        ->numeric(),
+                    Forms\Components\TextInput::make('cost')
+                        ->required()
+                        ->numeric()
+                        ->prefix('$'),
+                    Forms\Components\DateTimePicker::make('start_date')
+                        ->required(),
+                    Forms\Components\DateTimePicker::make('end_date')
+                        ->required(),
+                ])->columns(2),
             ]);
     }
 
@@ -53,8 +56,10 @@ class FurnitureReservationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('event.title')
+                    ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('furniture.name') //TODO
+                Tables\Columns\TextColumn::make('furniture.name')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('quantity')
                     ->numeric()
@@ -76,6 +81,14 @@ class FurnitureReservationResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->groups([
+                Group::make('furniture.name')
+                    ->groupQueryUsing(fn (Builder $query) => $query->groupBy('furniture.name'))
+            ])
+            ->groups([
+                Group::make('event.title')
+                    ->groupQueryUsing(fn (Builder $query) => $query->groupBy('event.title'))
             ])
             ->filters([
                 //

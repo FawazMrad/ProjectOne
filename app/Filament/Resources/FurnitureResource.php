@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\FurnitureResource\Pages;
 use App\Filament\Resources\FurnitureResource\RelationManagers;
+use App\Filament\Resources\FurnitureResource\RelationManagers\FurnitureReservationsRelationManager;
 use App\Models\Furniture;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -27,23 +28,26 @@ class FurnitureResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('type')
-                    ->required()
-                    ->maxLength(50),
-                Forms\Components\TextInput::make('quantity')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('image')
-                    ->url()
-                    ->placeholder('https://example.com/path/to/image.jpg'),
-                Forms\Components\TextInput::make('cost')
-                    ->required()
-                    ->numeric()
-                    ->prefix('$')
-                    ->columnSpanFull(),
+                Forms\Components\Section::make()->schema([
+                    Forms\Components\TextInput::make('name')
+                        ->required()
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('type')
+                        ->required()
+                        ->maxLength(50),
+                    Forms\Components\TextInput::make('quantity')
+                        ->required()
+                        ->numeric(),
+                    Forms\Components\TextInput::make('image')
+                        ->url()
+                        ->required()
+                        ->placeholder('https://example.com/path/to/image.jpg'),
+                    Forms\Components\TextInput::make('cost')
+                        ->required()
+                        ->numeric()
+                        ->prefix('$')
+                        ->columnSpanFull(),
+                ])->columns(2),
             ]);
     }
 
@@ -91,7 +95,7 @@ class FurnitureResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            FurnitureReservationsRelationManager::class,
         ];
     }
 
