@@ -528,7 +528,9 @@ class EventController extends Controller
         }
         $categoryId = $category->id;
 
-        $events = Event::where('category_id', $categoryId)->where('is_private', false)->where('start_date', '>', DateTimeHelper::getCurrentDateTime())->get();
+        $events = Event::where('category_id', $categoryId)
+            ->where('is_private', false)
+            ->where('start_date', '>', DateTimeHelper::getCurrentDateTime())->get();
 
         if ($events->isNotEmpty()) {
             $filteredEvents = EventHelper::filterEventsByBlockedFriendships($events, $user);
@@ -620,7 +622,11 @@ class EventController extends Controller
     {
         $user = $request->user();
         $userId = $user->id;
-        $events = Event::select('events.*', 'users.rating as creator_rating')->join('users', 'events.user_id', '=', 'users.id')->where('is_private', false)->orderBy('users.rating', 'desc')->take(10)->get();
+        $events = Event::select('events.*', 'users.rating as creator_rating')
+            ->join('users', 'events.user_id', '=', 'users.id')
+            ->where('is_private', false)
+            ->where('start_date','>=',DateTimeHelper::getCurrentDateTime())
+            ->orderBy('users.rating', 'desc')->take(10)->get();
 
         if ($events) {
             $filteredEvents = EventHelper::filterEventsByBlockedFriendships($events, $user);
@@ -629,6 +635,7 @@ class EventController extends Controller
                 $filteredEvents = $filteredEvents->map(function ($filteredEvent) use ($userId) {
                     return EventHelper::putFavouriteStatusInEvent($filteredEvent, $userId);
                 });
+
                 return response()->json(['events' => $filteredEvents->values()], 200);
             }
             return response()->json(['events' => __('event.noPopularEvents')], 404);

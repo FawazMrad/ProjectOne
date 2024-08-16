@@ -29,7 +29,7 @@ class AuthController extends Controller
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required',
                 'address' => 'nullable',
-                'phoneNumber' => 'required',
+                'phoneNumber' => 'required|unique:users,phone_number',
                 'birthDate' => 'required|date',
                 'profilePic' => 'nullable'
             ]);

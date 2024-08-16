@@ -9,6 +9,7 @@ use App\Models\Friendship;
 use App\Models\User;
 use Carbon\Carbon;
 use http\Env\Response;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -51,7 +52,10 @@ class UserController
         $user = $request->user();
         $userBirthDate = $user->birth_date;
         $fields = ['id', 'first_name', 'last_name', 'email', 'rating', 'qr_code', 'followers', 'following','created_at'];
-        $desiredUser = User::select($fields)->find($request->input('userId'));
+        $desiredUser = User::query()
+            ->whereDoesntHave('roles', fn(Builder $roleQuery) => $roleQuery
+                ->where('name', 'admin'))
+        ->select($fields)->find($request->input('userId'));
 
         if ($desiredUser) {
             $friendship = Friendship::where(function ($query) use ($user, $desiredUser) {
@@ -145,6 +149,7 @@ class UserController
     }
  public function searchUsers(Request $request){
         $user=$request->user();
+
         $targetUsers=self::searchUsersStatic($request);
         if($targetUsers['statusCode']===404){
             return response()->json(['message' => $targetUsers['message']],$targetUsers['statusCode']);
@@ -158,7 +163,8 @@ class UserController
         $user = $request->user();
 
 
-        $query = User::query();
+
+        $query =User::query()->whereDoesntHave('roles', fn(Builder $roleQuery) => $roleQuery->where('name', 'admin'));
 
         if ($request->has('name')) {
             $name = $request->input('name');

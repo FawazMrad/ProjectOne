@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('attendees', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->references('id')->on('users')->onDelete('cascade');;
-            $table->foreignId('event_id')->references('id')->on('events');
             $table->foreignId('event_id')->references('id')->on('events')->onDelete('cascade');
             $table->enum('status', ['INVITED', 'ATTENDING', 'PURCHASED', 'CANCELLED','CREATOR']);
             $table->boolean('checked_in')->default(false);
