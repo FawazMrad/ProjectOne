@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SoundResource\Pages;
 use App\Filament\Resources\SoundResource\RelationManagers;
+use App\Filament\Resources\SoundResource\RelationManagers\SoundReservationsRelationManager;
 use App\Models\Sound;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
@@ -28,29 +29,34 @@ class SoundResource extends Resource
     {
         return $form
             ->schema([
-                Select::make('type')
-                    ->options([
-                        'live' => 'Live',
-                        'recorded' => 'Recorded',
-                        'DJ' => 'DJ',
-                    ])
-                    ->required()
-                    ->preload()
-                    ->native(false),
-                Forms\Components\TextInput::make('genre')
-                    ->required()
-                    ->maxLength(50),
-                Forms\Components\TextInput::make('artist')
-                    ->maxLength(50),
-                Forms\Components\TextInput::make('rating')
-                    ->numeric(),
-                Forms\Components\TextInput::make('image')
-                    ->url()
-                    ->placeholder('https://example.com/path/to/image.jpg'),
-                Forms\Components\TextInput::make('cost')
-                    ->required()
-                    ->numeric()
-                    ->prefix('$'),
+                Forms\Components\Section::make()->schema([
+                    Select::make('type')
+                        ->options([
+                            'live' => 'LIVE',
+                            'recorded' => 'RECORDED',
+                            'DJ' => 'DJ',
+                        ])
+                        ->required()
+                        ->preload()
+                        ->native(false),
+                    Forms\Components\TextInput::make('genre')
+                        ->required()
+                        ->maxLength(50),
+                    Forms\Components\TextInput::make('artist')
+                        ->required()
+                        ->maxLength(50),
+                    Forms\Components\TextInput::make('rating')
+                        ->disabled()
+                        ->numeric(),
+                    Forms\Components\TextInput::make('image')
+                        ->required()
+                        ->url()
+                        ->placeholder('https://example.com/path/to/image.jpg'),
+                    Forms\Components\TextInput::make('cost')
+                        ->required()
+                        ->numeric()
+                        ->prefix('$'),
+                ])->columns(2)
             ]);
     }
 
@@ -101,7 +107,7 @@ class SoundResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            SoundReservationsRelationManager::class,
         ];
     }
 

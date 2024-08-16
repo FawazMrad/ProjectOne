@@ -2,39 +2,37 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
- */
 class UserFactory extends Factory
 {
+    protected $model = User::class;
+
     /**
      * Define the model's default state.
      *
-     * @return array<string, mixed>
+     * @return array
      */
-    public function definition(): array
+    public function definition()
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-            'remember_token' => Str::random(10),
+            'first_name' => $this->faker->firstName(),
+            'last_name' => $this->faker->lastName(),
+            'email' => $this->faker->unique()->safeEmail(),
+            'password' => Hash::make('password'),
+            'address' => $this->faker->address(),
+            'phone_number' => $this->faker->phoneNumber(),
+            'birth_date' => $this->faker->date('Y-m-d', '2004-12-31'),
+            'points' => $this->faker->numberBetween(0, 10000),
+            'rating' => $this->faker->randomFloat(1, 0, 5),
+            'followers' => $this->faker->numberBetween(0, 10000),
+            'following' => $this->faker->numberBetween(0, 10000),
+            'profile_pic' => $this->faker->imageUrl(640, 480, 'people', true, 'profile'),
+            'qr_code' => $this->faker->imageUrl(300, 300, 'qr', true, 'QR code'),
+           // 'created_at' => $this->faker->dateTimeBetween(now(),now()->addWeek()), // Random date between 1 year ago and 1 week from now
+            'created_at' => $this->faker->dateTimeBetween(now()->subYear(3), now()), // Random date between 1 year ago and 1 week from now
         ];
-    }
-
-    /**
-     * Indicate that the model's email address should be unverified.
-     *
-     * @return $this
-     */
-    public function unverified(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
     }
 }

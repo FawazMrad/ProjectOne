@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -27,24 +28,26 @@ class SecurityReservationResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('security_id')
-                    ->relationship(name: 'security', titleAttribute: 'clothes_color')
-                    ->label('Security Clothes Color')
-                    ->required(),
-                Forms\Components\Select::make('event_id')
-                    ->relationship(name: 'event', titleAttribute: 'title')
-                    ->required(),
-                Forms\Components\DateTimePicker::make('start_date')
-                    ->required(),
-                Forms\Components\DateTimePicker::make('end_date')
-                    ->required(),
-                Forms\Components\TextInput::make('quantity')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('cost')
-                    ->required()
-                    ->numeric()
-                    ->prefix('$'),
+                Forms\Components\Section::make()->schema([
+                    Forms\Components\Select::make('security_id')
+                        ->relationship(name: 'security', titleAttribute: 'clothes_color')
+                        ->label('Security Clothes Color')
+                        ->required(),
+                    Forms\Components\Select::make('event_id')
+                        ->relationship(name: 'event', titleAttribute: 'title')
+                        ->required(),
+                    Forms\Components\DateTimePicker::make('start_date')
+                        ->required(),
+                    Forms\Components\DateTimePicker::make('end_date')
+                        ->required(),
+                    Forms\Components\TextInput::make('quantity')
+                        ->required()
+                        ->numeric(),
+                    Forms\Components\TextInput::make('cost')
+                        ->required()
+                        ->numeric()
+                        ->prefix('$'),
+                ])->columns(2)
             ]);
     }
 
@@ -54,10 +57,10 @@ class SecurityReservationResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('security.clothes_color')
                     ->label('Security Clothes')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('event.title')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('start_date')
                     ->dateTime()
@@ -80,12 +83,20 @@ class SecurityReservationResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->groups([
+                Group::make('security.clothes_color')
+                    ->groupQueryUsing(fn(Builder $query) => $query->groupBy('security.clothes_color'))
+            ])
+            ->groups([
+                Group::make('event.title')
+                    ->groupQueryUsing(fn(Builder $query) => $query->groupBy('event.title'))
+            ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+//                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -105,9 +116,9 @@ class SecurityReservationResource extends Resource
     {
         return [
             'index' => Pages\ListSecurityReservations::route('/'),
-            'create' => Pages\CreateSecurityReservation::route('/create'),
+//            'create' => Pages\CreateSecurityReservation::route('/create'),
             'view' => Pages\ViewSecurityReservation::route('/{record}'),
-            'edit' => Pages\EditSecurityReservation::route('/{record}/edit'),
+//            'edit' => Pages\EditSecurityReservation::route('/{record}/edit'),
         ];
     }
 }

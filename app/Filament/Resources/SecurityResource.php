@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SecurityResource\Pages;
 use App\Filament\Resources\SecurityResource\RelationManagers;
+use App\Filament\Resources\SecurityResource\RelationManagers\SecurityReservationsRelationManager;
 use App\Models\Security;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -27,17 +28,18 @@ class SecurityResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('clothes_color')
-                    ->required()
-                    ->maxLength(20),
-                Forms\Components\TextInput::make('quantity')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('cost')
-                    ->required()
-                    ->numeric()
-                    ->prefix('$')
-                    ->columnSpanFull(),
+                Forms\Components\Section::make()->schema([
+                    Forms\Components\TextInput::make('clothes_color')
+                        ->required()
+                        ->maxLength(20),
+                    Forms\Components\TextInput::make('quantity')
+                        ->required()
+                        ->numeric(),
+                    Forms\Components\TextInput::make('cost')
+                        ->required()
+                        ->numeric()
+                        ->prefix('$'),
+                ])->columns(3)
             ]);
     }
 
@@ -80,7 +82,7 @@ class SecurityResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            SecurityReservationsRelationManager::class,
         ];
     }
 

@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -27,20 +28,23 @@ class SoundReservationResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('event_id')
-                    ->relationship(name: 'event', titleAttribute: 'title')
-                    ->required(),
-                Forms\Components\Select::make('sound_id')
-                    ->relationship(name: 'sound', titleAttribute: 'artist')
-                    ->required(),
-                Forms\Components\DateTimePicker::make('start_date')
-                    ->required(),
-                Forms\Components\DateTimePicker::make('end_date')
-                    ->required(),
-                Forms\Components\TextInput::make('cost')
-                    ->required()
-                    ->numeric()
-                    ->prefix('$'),
+                Forms\Components\Section::make()->schema([
+                    Forms\Components\Select::make('event_id')
+                        ->relationship(name: 'event', titleAttribute: 'title')
+                        ->required(),
+                    Forms\Components\Select::make('sound_id')
+                        ->relationship(name: 'sound', titleAttribute: 'artist')
+                        ->required(),
+                    Forms\Components\DateTimePicker::make('start_date')
+                        ->required(),
+                    Forms\Components\DateTimePicker::make('end_date')
+                        ->required(),
+                    Forms\Components\TextInput::make('cost')
+                        ->required()
+                        ->numeric()
+                        ->columnSpanFull()
+                        ->prefix('$'),
+                ])->columns(2)
             ]);
     }
 
@@ -49,10 +53,10 @@ class SoundReservationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('event.title')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('sound.artist')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('start_date')
                     ->dateTime()
@@ -72,12 +76,20 @@ class SoundReservationResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->groups([
+                Group::make('sound.artist')
+                    ->groupQueryUsing(fn(Builder $query) => $query->groupBy('sound.artist'))
+            ])
+            ->groups([
+                Group::make('event.title')
+                    ->groupQueryUsing(fn(Builder $query) => $query->groupBy('event.title'))
+            ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+//                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -97,9 +109,9 @@ class SoundReservationResource extends Resource
     {
         return [
             'index' => Pages\ListSoundReservations::route('/'),
-            'create' => Pages\CreateSoundReservation::route('/create'),
+//            'create' => Pages\CreateSoundReservation::route('/create'),
             'view' => Pages\ViewSoundReservation::route('/{record}'),
-            'edit' => Pages\EditSoundReservation::route('/{record}/edit'),
+//            'edit' => Pages\EditSoundReservation::route('/{record}/edit'),
         ];
     }
 }

@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -27,23 +28,26 @@ class DecorationItemReservationResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('event_id')
-                    ->relationship(name: 'event', titleAttribute: 'title')
-                    ->required(),
-                Forms\Components\Select::make('decoration_item_id')
-                    ->relationship(name: 'decorationItem', titleAttribute: 'name')
-                    ->required(),
-                Forms\Components\DateTimePicker::make('start_date')
-                    ->required(),
-                Forms\Components\DateTimePicker::make('end_date')
-                    ->required(),
-                Forms\Components\TextInput::make('quantity')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('cost')
-                    ->required()
-                    ->numeric()
-                    ->prefix('$'),
+                Forms\Components\Section::make()->schema([
+                    Forms\Components\Select::make('event_id')
+                        ->relationship(name: 'event', titleAttribute: 'title')
+                        ->required(),
+                    Forms\Components\Select::make('decoration_item_id')
+                        ->relationship(name: 'decorationItem', titleAttribute: 'name')
+                        ->required(),
+                    Forms\Components\DateTimePicker::make('start_date')
+                        ->required(),
+                    Forms\Components\DateTimePicker::make('end_date')
+                        ->required(),
+                    Forms\Components\TextInput::make('quantity')
+                        ->required()
+                        ->numeric(),
+                    Forms\Components\TextInput::make('cost')
+                        ->required()
+                        ->numeric()
+                        ->prefix('$'),
+                ])->columns(2),
+
             ]);
     }
 
@@ -52,11 +56,11 @@ class DecorationItemReservationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('event.title')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('decorationitem.name')
                     ->label('Decoration Item')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('start_date')
                     ->dateTime()
@@ -79,12 +83,21 @@ class DecorationItemReservationResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->groups([
+                Group::make('decorationitem.name')
+                    ->groupQueryUsing(fn(Builder $query) => $query->groupBy('decorationitem.name'))
+                    ->label('Decoration Item')
+            ])
+            ->groups([
+                Group::make('event.title')
+                    ->groupQueryUsing(fn(Builder $query) => $query->groupBy('event.title'))
+            ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+//                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -104,9 +117,9 @@ class DecorationItemReservationResource extends Resource
     {
         return [
             'index' => Pages\ListDecorationItemReservations::route('/'),
-            'create' => Pages\CreateDecorationItemReservation::route('/create'),
+//            'create' => Pages\CreateDecorationItemReservation::route('/create'),
             'view' => Pages\ViewDecorationItemReservation::route('/{record}'),
-            'edit' => Pages\EditDecorationItemReservation::route('/{record}/edit'),
+//            'edit' => Pages\EditDecorationItemReservation::route('/{record}/edit'),
         ];
     }
 }

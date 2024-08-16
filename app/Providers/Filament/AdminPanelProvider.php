@@ -44,8 +44,14 @@ class AdminPanelProvider extends PanelProvider
             //->font('Inknut Antiqua')
             ->font('Nanum Gothic')
             ->navigationGroups([
+                'User Management',
                 'Events Management',
-                'User Management'
+                'Venue Management',
+                'Decor Management',
+                'Catering Management',
+                'Sound Management',
+                'Security Management',
+                'Balance Station Management'
             ])
             //->viteTheme('resources/css/filament/admin/theme.css')
             ->defaultThemeMode(ThemeMode::Dark)

@@ -4,14 +4,17 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\FoodResource\Pages;
 use App\Filament\Resources\FoodResource\RelationManagers;
+use App\Helpers\TranslationHelper;
 use App\Models\Food;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Resources\Pages\ViewRecord;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\DB;
 
 class FoodResource extends Resource
 {
@@ -27,25 +30,44 @@ class FoodResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(100),
-                Forms\Components\TextInput::make('type')
-                    ->required()
-                    ->maxLength(50),
-                Forms\Components\TextArea::make('description_en')
-                    ->label('English Description')
-                    ->maxLength(255),
-                Forms\Components\TextArea::make('description_ar')
-                    ->label('Arabic Description')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('cost')
-                    ->required()
-                    ->numeric()
-                    ->prefix('$'),
-                Forms\Components\TextInput::make('image')
-                    ->url()
-                    ->placeholder('https://example.com/path/to/image.jpg'),
+                Forms\Components\Section::make()->schema([
+                    Forms\Components\TextInput::make('name')
+                        ->required()
+                        ->maxLength(100),
+                    Forms\Components\TextInput::make('type')
+                        ->required()
+                        ->maxLength(50),
+                    Forms\Components\TextArea::make('description')
+                        ->visible(fn($context) => $context === 'create' || $context === 'edit')
+                        ->label('Description')
+                        ->columnSpanFull()
+                        ->maxLength(255)
+                        ->afterStateUpdated(function (callable $get, callable $set) {
+                            $description = $get('description');
+                            if ($description) {
+                                try {
+                                    $translatedData = TranslationHelper::descriptionAndTranslatedDescription(['description' => $description]);
+                                    $set('description_en', $translatedData['description_en']);
+                                    $set('description_ar', $translatedData['description_ar']);
+                                } catch (\Exception $e) {
+                                    $set('description_en', '');
+                                    $set('description_ar', '');
+                                }
+                            }
+                        }),
+                    Forms\Components\Hidden::make('description_en')
+                        ->label('English Description'),
+                    Forms\Components\Hidden::make('description_ar')
+                        ->label('Arabic Description'),
+                    Forms\Components\TextInput::make('cost')
+                        ->required()
+                        ->numeric()
+                        ->prefix('$'),
+                    Forms\Components\TextInput::make('image')
+                        ->url()
+                        ->required()
+                        ->placeholder('https://example.com/path/to/image.jpg'),
+                ])->columns(2),
             ]);
     }
 
@@ -55,6 +77,8 @@ class FoodResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('description_en')
+                    ->label('Description'),
                 Tables\Columns\TextColumn::make('type')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('cost')
@@ -90,7 +114,7 @@ class FoodResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\FoodReservationsRelationManager::class,
         ];
     }
 
