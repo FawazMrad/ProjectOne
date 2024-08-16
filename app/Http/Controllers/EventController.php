@@ -276,7 +276,12 @@ class EventController extends Controller
     public function getEventReservations(Request $request)
     {
         $eventId = $request->input('eventId');
-        $event = Event::with(['furnitureReservations', 'soundReservations', 'securityReservations', 'foodReservations', 'drinkReservations', 'decorationItemReservations'])->find($eventId);
+        $event = Event::with(['furnitureReservations.furniture',
+            'soundReservations.Sound',
+            'securityReservations.security',
+            'foodReservations.food',
+            'drinkReservations.drink',
+            'decorationItemReservations.decorationItem'])->find($eventId);
 
         if (!$event) {
             return response()->json(['error' => 'Event not found'], 404);
@@ -294,7 +299,7 @@ class EventController extends Controller
 
     }
 
-    public function updateEventQuantitiesReservations(Request $request)// furniture, security,decoration items
+    public function updateEventQuantitiesReservations(Request $request)// furniture, security,decoration items,food,drink
     {
         $newItems = $request->input('newItems');
         $type = $request->input('itemsType');
