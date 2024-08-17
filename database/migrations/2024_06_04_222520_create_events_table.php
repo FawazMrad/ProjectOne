@@ -27,7 +27,7 @@ return new class extends Migration
             $table->decimal('total_cost', 10, 2)->default(0);
             $table->decimal('ticket_price', 10, 2)->default(0);
             $table->decimal('vip_ticket_price', 10, 2)->default(0);
-            $table->string('image', 255)->nullable();
+            $table->longText('image', 255)->nullable();
             $table->text('qr_code')->nullable();
             $table->float('rating')->default(0);
             $table->timestamps();

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('description_ar', 255)->nullable();
             $table->integer('cost');
             $table->integer('age_required')->nullable();
-            $table->string('image', 255)->nullable();
+            $table->longText('image', 255)->nullable();
             $table->timestamps();
         });
     }

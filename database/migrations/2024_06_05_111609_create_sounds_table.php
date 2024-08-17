@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('genre', 50);
             $table->string('artist', 50)->nullable();
             $table->float('rating')->default(0);
-            $table->text('image', 255)->nullable();
+            $table->longText('image', 255)->nullable();
             $table->decimal('cost', 10, 2);
             $table->timestamps();
         });

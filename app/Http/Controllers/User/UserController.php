@@ -209,33 +209,36 @@ class UserController
     public function editProfile(Request $request)
     {
         $user = $request->user();
-        if ($request->has('firstName')) {
+        if ($request->has('firstName')&&$request->input('firstName')!= null) {
             $user->first_name = $request->input('firstName');
         }
 
-        if ($request->has('lastName')) {
+        if ($request->has('lastName')&&$request->input('lastName')!= null) {
             $user->last_name = $request->input('lastName');
         }
 
-        if ($request->has('address')) {
+        if ($request->has('address')&&$request->input('address')!= null) {
             $user->address = $request->input('address');
         }
 
-        if ($request->has('birthDate')) {
+        if ($request->has('birthDate')&&$request->input('birthDate')!= null) {
             $user->birth_date = $request->input('birthDate');
         }
 
-        if ($request->has('phoneNumber')) {
+        if ($request->has('phoneNumber')&&$request->input('phoneNumber')!= null) {
             $user->phone_number = $request->input('phoneNumber');
         }
 
-        if ($request->has('profilePicture')) {
+        if ($request->has('profilePicture')&&$request->input('profilePicture')!= null) {
             $user->profile_pic = $request->input('profilePicture');
         }
-        if ($request->has('email')) {
+        if ($request->has('email')&&$request->input('email')!= null) {
             $user->email = $request->input('email');
         }
-        if($request->has('oldPassword')) {
+        if($request->has('oldPassword')
+                &&$request->input('oldPassword')!= null
+            &&$request->input('newPassword')
+            &&$request->input('newPassword')!= null) {
             $oldPassword = $request->input('oldPassword');
             $newPassword = $request->input('newPassword');
             $givenCurrentPassword = Hash::check($oldPassword, $user->password);

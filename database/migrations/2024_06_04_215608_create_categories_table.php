@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name', 100);
             $table->text('description_en')->nullable();
             $table->text('description_ar')->nullable();
-            $table->text('icon', 255)->nullable();
+            $table->longText('icon', 255)->nullable();
             $table->timestamps();
         });
     }
