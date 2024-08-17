@@ -26,7 +26,7 @@ class EventFactory extends Factory
             'description_ar' => $this->faker->text(200),
             'description_en' => $this->faker->text(200),
             'start_date' => $this->faker->dateTimeBetween(now()->subYears(3), now()->addYear()),
-            'min_age' => $this->faker->numberBetween(0, 100),
+            'min_age' => $this->faker->numberBetween(10, 18),
             'is_paid' => $this->faker->boolean(),
             'is_private' => $this->faker->boolean(),
             'attendance_type' => $this->faker->randomElement(['INVITATION', 'TICKET']),

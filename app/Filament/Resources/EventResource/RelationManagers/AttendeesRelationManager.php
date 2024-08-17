@@ -37,6 +37,15 @@ class AttendeesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('ticket_type')->sortable(),
                 Tables\Columns\TextColumn::make('seat_number')->sortable(),
                 Tables\Columns\TextColumn::make('discount')->sortable(),
+                Tables\Columns\ImageColumn::make('qr_code')
+                    ->label('QR Code')
+                    ->getStateUsing(function ($record) {
+                        if ($record->qr_code) {
+                            return 'data:image/svg+xml;base64,' . $record->qr_code;
+                        }
+                        return null;
+                    })
+                    ->size(100),
             ])
             ->filters([
                 //

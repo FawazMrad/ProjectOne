@@ -69,8 +69,7 @@ class UserResource extends Resource
                 Forms\Components\Section::make('Other Details')
                     ->schema([
                         Forms\Components\TextInput::make('profile_pic')
-                            ->label('Profile photo')
-                            ->maxLength(255),
+                            ->label('Profile photo'),
                         Forms\Components\DatePicker::make('birth_date'),
                         Forms\Components\TextInput::make('points')
                             ->required()
@@ -118,8 +117,15 @@ class UserResource extends Resource
                     ->numeric()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('qr_code')
-                    ->searchable()
+                Tables\Columns\ImageColumn::make('qr_code')
+                    ->label('QR Code')
+                    ->getStateUsing(function ($record) {
+                        if ($record->qr_code) {
+                            return 'data:image/svg+xml;base64,' . $record->qr_code;
+                        }
+                        return null;
+                    })
+                    ->size(100)
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
