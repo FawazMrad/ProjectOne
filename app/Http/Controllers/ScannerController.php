@@ -35,6 +35,7 @@ class ScannerController
             }
             return response()->json(['message' => __('auth.notAttendee')], 400);
         }
+
         return response()->json(['message' => __('auth.notAttendee')], 400);
     }
 
