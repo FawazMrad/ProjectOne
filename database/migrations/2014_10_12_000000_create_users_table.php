@@ -24,7 +24,7 @@ return new class extends Migration
             $table->float('rating')->default(0);
             $table->integer('followers')->default(0);
             $table->integer('following')->default(0);
-            $table->longText('profile_pic', 255)->nullable();
+            $table->longText('profile_pic')->nullable();
             $table->text('qr_code', 255)->nullable();
             $table->timestamps();
         });
