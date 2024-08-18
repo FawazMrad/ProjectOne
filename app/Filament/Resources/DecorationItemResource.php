@@ -83,7 +83,7 @@ class DecorationItemResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make('image')
                     ->circular()
-                    ->size(50),
+                    ->size(100),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('decorationCategory.name')

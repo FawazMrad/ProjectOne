@@ -62,7 +62,7 @@ class DecorationCategoryFactory extends Factory
             'name' => $this->faker->unique()->randomElement($names), // Randomly select a category name from predefined options
             'description_en' => $this->faker->randomElement($englishDescriptions), // English description from predefined list
             'description_ar' => $this->faker->randomElement($arabicDescriptions), // Arabic description from predefined list
-            'icon' => $this->faker->imageUrl(100, 100, 'icon', true, 'icon'), // Placeholder icon image URL
+            'icon' => 'https://5.imimg.com/data5/SELLER/Default/2021/5/KF/YW/UG/50200512/whatsapp-image-2021-05-31-at-11-43-49.jpeg'
         ];
     }
 }

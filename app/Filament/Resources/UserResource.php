@@ -92,8 +92,14 @@ class UserResource extends Resource
             ->columns
             ([
                 Tables\Columns\ImageColumn::make('profile_pic')
+                    ->getStateUsing(function ($record) {
+                        if ($record->profile_pic) {
+                            return 'data:image/jpeg;base64,' . $record->profile_pic;  // Adjust MIME type if necessary
+                        }
+                        return null;
+                    })
                     ->circular()
-                    ->size(50)
+                    ->size(100)
                     ->label('Profile Photo'),
                 Tables\Columns\TextColumn::make('full_name')
                     ->searchable(['first_name', 'last_name'])

@@ -67,7 +67,7 @@ class SoundResource extends Resource
                 Tables\Columns\ImageColumn::make('image')
                     ->label('Photo')
                     ->circular()
-                    ->size(50),
+                    ->size(100),
                 Tables\Columns\TextColumn::make('type')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('genre')

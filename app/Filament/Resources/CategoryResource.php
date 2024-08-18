@@ -75,7 +75,7 @@ class CategoryResource extends Resource
                     ->label('Description'),
                 Tables\Columns\ImageColumn::make('icon')
                     ->circular()
-                    ->size(50),
+                    ->size(100),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

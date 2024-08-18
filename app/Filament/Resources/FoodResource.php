@@ -86,7 +86,7 @@ class FoodResource extends Resource
                     ->sortable(),
                 Tables\Columns\ImageColumn::make('image')
                     ->circular()
-                    ->size(50),
+                    ->size(100),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

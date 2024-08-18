@@ -17,6 +17,7 @@ use App\Models\Friendship;
 use App\Models\Furniture;
 use App\Models\FurnitureReservation;
 use App\Models\Preference;
+use App\Models\Rating;
 use App\Models\Security;
 use App\Models\SecurityReservation;
 use App\Models\Sound;
@@ -40,15 +41,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Drink::factory()->count(20)->create();
-        Food::factory()->count(25)->create();
-        Venue::factory()->count(30)->create();
-        Furniture::factory()->count(36)->create();
-        DecorationCategory::factory()->count(20)->create();
-        DecorationItem::factory()->count(30)->create();
-        Sound::factory()->count(30)->create();
-        Security::factory()->count(50)->create();
+        //Seeding Providers
+        Drink::factory()->count(10)->create();
+        Food::factory()->count(10)->create();
+        Venue::factory()->count(10)->create();
+        Furniture::factory()->count(10)->create();
+        DecorationCategory::factory()->count(10)->create();
+        DecorationItem::factory()->count(10)->create();
+        Sound::factory()->count(10)->create();
+        Security::factory()->count(10)->create();
         Station::factory()->count(10)->create();
+
+
+        //Seeding Users With Wallets,Preferences And Friendships
         User::factory()->count(15)->create()->each(function (User $user) {
             $qrData = [
                 'id' => $user->id,
@@ -59,17 +64,17 @@ class DatabaseSeeder extends Seeder
             QR_CodeHelper::generateAndSaveQrCode($qrData, 'User');
             $user->save();
 
-
             Preference::factory()->create([
                 'user_id' => $user->id,
                 'theme' => ['light', 'dark'][array_rand(['light', 'dark'])],
                 'language' => ['en', 'ar'][array_rand(['en', 'ar'])],
                 'notification_enabled' => rand(0, 1),
             ]);
+
             Wallet::factory()->create([
                 'user_id' => $user->id,
             ]);
-            for ($i = 0; $i < 10; $i++) {
+            for ($i = 0; $i < 3; $i++) {
                 do {
                     $receiver = User::inRandomOrder()->first();
                     $status = fake()->randomElement(['FOLLOWING', 'MUTUAL', 'BLOCKED']);
@@ -86,7 +91,7 @@ class DatabaseSeeder extends Seeder
                     ]);
                 }
             }
-            for ($i = 0; $i < 10; $i++) {
+            for ($i = 0; $i < 3; $i++) {
                 do {
                     $sender = User::inRandomOrder()->first();
                     $status = fake()->randomElement(['FOLLOWING', 'MUTUAL', 'BLOCKED']);
@@ -105,8 +110,11 @@ class DatabaseSeeder extends Seeder
                 }
             }
         });
+
+
+        //Seeding Categories and Events With Reservations and Attendees
         Category::factory()->count(8)->create();
-        Event::factory()->count(20)->create()->each(function (Event $event) {
+        Event::factory()->count(1)->create()->each(function (Event $event) {
             $data = [
                 'id' => $event->id,
                 'Description_ar' => $event->description_ar,
@@ -129,7 +137,7 @@ class DatabaseSeeder extends Seeder
                 'event_id' => $event->id,
                 'start_date' => $event->start_date,
                 'end_date' => $event->end_date,]);
-            DecorationItemReservation::factory()->count(10)->create([
+            DecorationItemReservation::factory()->count(3)->create([
                 'event_id' => $event->id,
                 'start_date' => $event->start_date,
                 'end_date' => $event->end_date,]);
@@ -139,7 +147,7 @@ class DatabaseSeeder extends Seeder
             DrinkReservation::factory()->count(5)->create([
                 'event_id' => $event->id,
                 'serving_date' => $event->start_date,]);
-            SoundReservation::factory()->count(6)->create([
+            SoundReservation::factory()->count(4)->create([
                 'event_id' => $event->id,
                 'start_date' => $event->start_date,
                 'end_date' => $event->end_date,]);
@@ -148,35 +156,49 @@ class DatabaseSeeder extends Seeder
                 'start_date' => $event->start_date,
                 'end_date' => $event->end_date,]);
 
-            $usersCount = User::count();
-            $randomUsers = User::inRandomOrder()->take(min(10, $usersCount / 2))->get();
-            foreach ($randomUsers as $user) {
+            $uniqueUsers = User::inRandomOrder()
+                ->take(15)
+                ->get();
+            foreach ($uniqueUsers as $uniqueUser) {
+                // Create an attendee for each unique user
                 Attendee::factory()->create([
-                    'user_id' => $user->id,
+                    'user_id' => $uniqueUser->id,
                     'event_id' => $event->id,
                     'purchase_date' => $eventStartDate->copy()->subDays(3),
-                ])->each(function (Attendee $attendee) use ($eventStartDate, $event) {
-                    $qrData = ['id' => $attendee->id, 'userId' => $attendee->user_id, 'eventId' => $attendee->event_id, 'seatNumber' => $attendee->seat_number];
-                    QR_CodeHelper::generateAndSaveQrCode($qrData, 'Attendee');
-                    $attendee->checked_in = now()->greaterThanOrEqualTo($eventStartDate->copy()) && $attendee->status !== 'CANCELLED' ? true : false;
-                    $attendee->save();
-                });
-
+                ]);
             }
+
+// Update created attendees
+            Attendee::where('event_id', $event->id)->whereIn('user_id', $uniqueUsers->pluck('id'))->each(function (Attendee $attendee) use ($eventStartDate) {
+                $qrData = [
+                    'id' => $attendee->id,
+                    'userId' => $attendee->user_id,
+                    'eventId' => $attendee->event_id,
+                    'seatNumber' => $attendee->seat_number
+                ];
+                QR_CodeHelper::generateAndSaveQrCode($qrData, 'Attendee');
+                $attendee->checked_in = $eventStartDate->isPast() && $attendee->status === 'ATTENDING';
+                $attendee->save();
+            });
         });
+
+        //Seeding Favourites
         $users = User::query()->get();
         foreach ($users as $user) {
             Favourite::factory()->count(5)->create([
                 'user_id' => $user->id,
             ]);
         }
-//        VenueReservation::factory()->count(20)->create();
-//        FurnitureReservation::factory()->count(20)->create();
-//        DecorationItemReservation::factory()->count(20)->create();
-//        FoodReservation::factory()->count(20)->create();
-//        DrinkReservation::factory()->count(20)->create();
-//        SoundReservation::factory()->count(20)->create();
-//        SecurityReservation::factory()->count(20)->create();
 
+
+        // Seed ratings
+        $ratableAttendees = Attendee::where('checked_in', true)->get();
+
+        foreach ($ratableAttendees as $attendee) {
+            Rating::factory()->create([
+                'user_id' => $attendee->user_id,
+                'event_id' => $attendee->event_id,
+            ]);
+        }
     }
 }
