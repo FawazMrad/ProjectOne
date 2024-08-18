@@ -58,14 +58,49 @@ class AttendeeController
         return response()->json(['Following'=>$followingToInvite],200);
         return response()->json(['Following'=>$followingToInvite],404);
     }
-    public function getInvitedUsers(Request $request){
-        $user=$request->user();
-        $eventId=$request->input('eventId');
-        $event=Event::find($eventId);
-        $attendees=$event->attendees()->get();
-        if($attendees->isNotEmpty())
-         return \response()->json(['invitedUsers'=>$attendees],200);
-         return \response()->json(['invitedUsers'=>0],404);
+    public function getInvitedUsers(Request $request)
+    {
+        $user = $request->user();
+        $eventId = $request->input('eventId');
+        $event = Event::find($eventId);
+
+        // Check if the event exists
+        if (!$event) {
+            return response()->json(['message' => 'Event not found'], 404);
+        }
+
+        $attendees = $event->attendees()->with('user')->get();
+
+        // Map over the attendees and include the user's full name within the attendee data
+        $invitedUsers = $attendees->map(function ($attendee) {
+            // Add the user's full name to the attendee data
+            $attendeeData = $attendee->only([
+                'id',
+                'user_id',
+                'event_id',
+                'status',
+                'checked_in',
+                'purchase_date',
+                'ticket_price',
+                'ticket_type',
+                'seat_number',
+                'discount',
+                'qr_code',
+                'is_main_scanner',
+                'is_scanner',
+                'created_at',
+                'updated_at'
+            ]);
+            $attendeeData['userFullName'] = $attendee->user->first_name . ' ' . $attendee->user->last_name;
+
+            return $attendeeData;
+        });
+
+        if ($invitedUsers->isNotEmpty()) {
+            return response()->json(['invitedUsers' => $invitedUsers], 200);
+        }
+
+        return response()->json(['invitedUsers' => 0], 404);
     }
     public function sendInvitation(Request $request)
     {
