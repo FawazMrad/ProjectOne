@@ -19,7 +19,7 @@ return new class extends Migration
             $table->float('decor_rating', 8, 2)->nullable();
             $table->float('music_rating', 8, 2)->nullable();
             $table->float('food_rating', 8, 2)->nullable();
-            $table->integer('drink_rating')->nullable();
+            $table->float('drink_rating', 8, 2)->nullable();
             $table->float('aggregate_rating', 8, 2)->nullable();
             $table->primary(['event_id', 'user_id']);
             $table->timestamps();

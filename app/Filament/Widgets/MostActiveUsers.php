@@ -25,14 +25,20 @@ class MostActiveUsers extends BaseWidget
             ->whereDoesntHave('roles', function (Builder $roleQuery) {
                 $roleQuery->where('name', 'admin');
             })
-        ->where('points','>=',$this->getFifthUserPoints());
+            ->where('points', '>=', $this->getFifthUserPoints());
         return $table
             ->query($query)
             ->defaultSort('points', 'desc')
             ->columns([
                 ImageColumn::make('profile_pic')
+                    ->getStateUsing(function ($record) {
+                        if ($record->profile_pic) {
+                            return 'data:image/jpeg;base64,' . $record->profile_pic;  // Adjust MIME type if necessary
+                        }
+                        return null;
+                    })
                     ->circular()
-                    ->size(50)
+                    ->size(100)
                     ->label('Profile Photo'),
                 TextColumn::make('full_name')
                     ->label('Name')
@@ -77,6 +83,7 @@ class MostActiveUsers extends BaseWidget
             ->searchable(false);
 
     }
+
     public function getFifthUserPoints(): ?int
     {
         $fifthUser = User::query()

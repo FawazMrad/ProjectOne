@@ -23,7 +23,7 @@ class WalletFactory extends Factory
     public function definition()
     {
         return [
-            'balance' => $this->faker->randomFloat(2, 0, 100000),  // Generates a random balance between 0 and 10000
+            'balance' => $this->faker->randomFloat(100000, 0, 1000000),  // Generates a random balance between 0 and 10000
         ];
     }
 }

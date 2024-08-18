@@ -42,8 +42,8 @@ class FoodFactory extends Factory
             'type' => $this->faker->randomElement(['main course', 'appetizer', 'dessert']),
             'description_en' => $this->faker->randomElement($descriptions_en),
             'description_ar' => $this->faker->randomElement($descriptions_ar),
-            'cost' => $this->faker->numberBetween(5, 50),
-            'image' => $this->faker->imageUrl(640, 480, 'food', true, 'food')
+            'cost' => $this->faker->numberBetween(5, 20),
+            'image' => 'https://media.istockphoto.com/id/1316145932/photo/table-top-view-of-spicy-food.jpg?s=612x612&w=0&k=20&c=eaKRSIAoRGHMibSfahMyQS6iFADyVy1pnPdy1O5rZ98=',
         ];
     }
 }

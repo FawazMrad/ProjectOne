@@ -45,7 +45,7 @@ class DrinkFactory extends Factory
             'description_ar' => $this->faker->randomElement($descriptions_ar),
             'cost' => $this->faker->randomFloat(2, 1, 20),
             'age_required' => $ageRequired,
-            'image' => $this->faker->imageUrl(640, 480, 'beverages', true, 'drink')
+            'image' => 'https://img.freepik.com/free-photo/fresh-cocktails-with-ice-lemon-lime-fruits-generative-ai_188544-12370.jpg'
         ];
     }
 }

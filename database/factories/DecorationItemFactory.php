@@ -39,11 +39,11 @@ class DecorationItemFactory extends Factory
         return [
             'decoration_category_id' => DecorationCategory::inRandomOrder()->value('id'), // Get a random ID from the DecorationCategory table
             'name' => $this->faker->randomElement(['Flowers', 'Lights', 'Balloons', 'Ribbons', 'Candles', 'Lanterns']),
-            'image' => $this->faker->imageUrl(640, 480, 'decoration', true, 'decoration'),
+            'image' => 'https://5.imimg.com/data5/SELLER/Default/2021/5/KF/YW/UG/50200512/whatsapp-image-2021-05-31-at-11-43-49.jpeg',
             'description_en' => $this->faker->randomElement($englishDescriptions), // English description from predefined list
             'description_ar' => $this->faker->randomElement($arabicDescriptions), // Arabic description from predefined list
             'quantity' => $this->faker->numberBetween(1, 100),
-            'cost' => $this->faker->randomFloat(2, 5, 500), // Random float between 5.00 and 500.00
+            'cost' => $this->faker->randomFloat(2, 5, 100), // Random float between 5.00 and 500.00
         ];
     }
 }

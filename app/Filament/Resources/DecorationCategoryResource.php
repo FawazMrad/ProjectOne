@@ -68,7 +68,7 @@ class DecorationCategoryResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make('icon')
                     ->circular()
-                    ->size(50),
+                    ->size(100),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('description_en')

@@ -83,7 +83,7 @@ class StationResource extends Resource
                 Tables\Columns\TextColumn::make('manager_email')
                     ->searchable(),
                 Tables\Columns\ImageColumn::make('manager_id_picture')
-                    ->size(50)
+                    ->size(100)
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('balance')
                     ->numeric()

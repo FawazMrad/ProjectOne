@@ -26,11 +26,11 @@ class AttendeeFactory extends Factory
         return [
             'status' => $this->faker->randomElement(['INVITED', 'ATTENDING', 'PURCHASED', 'CANCELLED']),
 //            'checked_in' => $this->faker->boolean(),
-            'ticket_price' => $this->faker->randomFloat(2, 10, 500), // Random price between 10 and 500
+            'ticket_price' => $this->faker->randomFloat(2, 10, 500),
             'ticket_type' => $this->faker->randomElement(['REGULAR', 'VIP']),
-            'seat_number' => $this->faker->bothify('??-###'), // Example seat number format: AB-123
-            'discount' => $this->faker->randomFloat(2, 0, 100), // Random discount between 0 and 100
-            'qr_code' => Str::random(40), // Generates a random 40-character string
+            'seat_number' => $this->faker->regexify('[vr]{1}[0-9]{3}'),
+            'discount' => $this->faker->randomFloat(2, 0, 100),
+            'qr_code' => Str::random(40),
         ];
     }
 }

@@ -29,8 +29,8 @@ class FurnitureFactory extends Factory
                 ? $this->faker->randomElement(['_vipChair', '_regularChair']) // Restricted values for chairs
                 : $this->faker->randomElement($otherTypes), // Other types for other furniture
             'quantity' => $this->faker->numberBetween(1, 100),
-            'image' => $this->faker->imageUrl(640, 480, 'furniture', true, 'furniture'), // Generic furniture image URL
-            'cost' => $this->faker->numberBetween(50, 2000),
+            'image' => 'https://t3.ftcdn.net/jpg/02/71/05/60/360_F_271056073_C0tbpNLFbcGurqxoMXqPBrx8vzL9VLVY.jpg',
+            'cost' => $this->faker->numberBetween(50, 100),
         ];
     }
 }
